@@ -8,7 +8,7 @@ export const createPool = () => {
   // Hardcoded Supabase connection string
   // NOTE: If deploying to Render, and you get connection errors, you may need to use 
   // the IPv4 Connection Pooler string provided by Supabase (usually port 6543)
-  const connectionString = "postgresql://postgres.rwxjjxwjyqmqfioxjrmt:atuan0987231270@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  const connectionString = "postgresql://postgres:atuan0987231270@db.rwxjjxwjyqmqfioxjrmt.supabase.co:5432/postgres";
   
   return new Pool({
     connectionString: connectionString,
