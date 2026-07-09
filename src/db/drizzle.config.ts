@@ -4,7 +4,7 @@ import * as dotenv from "dotenv";
 // Load environment variables from .env file.
 dotenv.config();
 
-const dbUrl = "postgresql://postgres:atuan0987231270@db.rwxjjxwjyqmqfioxjrmt.supabase.co:5432/postgres";
+const dbUrl = "postgresql://postgres.rwxjjxwjyqmqfioxjrmt:atuan0987231270@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
 
 export default defineConfig({
   schema: "./src/db/schema.ts",
