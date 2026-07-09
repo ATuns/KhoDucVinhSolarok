@@ -707,7 +707,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/unrecord", requireAuth as any, a
               and(
                 eq(stockTransactions.productId, item.productId),
                 eq(stockTransactions.type, 'NHAP'),
-                like(stockTransactions.note, `%${existing.documentCode}%`)
+                eq(stockTransactions.docNumber, existing.documentCode)
               )
             );
         }

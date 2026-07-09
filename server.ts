@@ -585,15 +585,32 @@ async function startServer() {
           }
         }
       }
-      if (lowStock === "true") conditions.push(sql`${products.quantity} <= ${products.minStock}`);
-      if (inStock === "true") conditions.push(sql`${products.quantity} > 0`);
+      const dynamicQuantityQuery = sql<number>`
+        COALESCE(
+          (
+            SELECT SUM(
+              CASE 
+                WHEN type IN ('NHAP', 'BO_GHI_SO') THEN quantity
+                WHEN type IN ('XUAT', 'GHI_SO') THEN -quantity
+                ELSE 0 
+              END
+            )
+            FROM stock_transactions st
+            WHERE st.product_id = products.id
+          ), 0
+        )
+      `.mapWith(Number);
+
+      if (lowStock === "true") conditions.push(sql`${dynamicQuantityQuery} <= ${products.minStock}`);
+      if (inStock === "true") conditions.push(sql`${dynamicQuantityQuery} > 0`);
+
       const query = db.select({
         id: products.id,
         code: products.code,
         name: products.name,
         category: products.category,
         unit: products.unit,
-        quantity: products.quantity,
+        quantity: dynamicQuantityQuery,
         price: products.price,
         minStock: products.minStock,
         isHidden: products.isHidden,
@@ -1691,7 +1708,7 @@ async function startServer() {
                 and(
                   eq(stockTransactions.productId, itm.productId),
                   eq(stockTransactions.type, "GHI_SO"),
-                  like(stockTransactions.note, `%${invoice.documentCode}%`)
+                  eq(stockTransactions.docNumber, invoice.documentCode)
                 )
               );
           }
