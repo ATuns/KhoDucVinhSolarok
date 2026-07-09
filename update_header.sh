@@ -1,0 +1,2 @@
+#!/bin/bash
+sed -i 's/<h1 className="font-display text-lg font-bold tracking-tight text-slate-900">Quản lý Kho Vật Tư<\/h1>/<div className="flex items-center gap-2"><button onClick={() => setSelectedWarehouse(null)} className="p-1 hover:bg-slate-200 rounded-md transition-colors text-slate-500 hover:text-slate-700" title="Quay lại danh sách kho"><ChevronLeft className="w-5 h-5" \/><\/button><h1 className="font-display text-lg font-bold tracking-tight text-slate-900">Kho: {selectedWarehouse.name}<\/h1><\/div>/' src/components/WarehouseTab.tsx

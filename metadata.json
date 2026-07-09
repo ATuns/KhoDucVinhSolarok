@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Đức Vinh Solar",
+  "description": "Hệ thống quản lý kho và bán hàng vật tư năng lượng mặt trời cho Đức Vinh Solar",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

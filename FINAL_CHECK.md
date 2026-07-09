@@ -1,0 +1,6 @@
+- Multi-warehouse: Done
+- Mandatory warehouse selection: Done
+- Warehouse CRUD: Done
+- Products belong to separate warehouses: Done
+- Excel Import/Export by warehouse: Done
+- Prevent changing product warehouse: Done
