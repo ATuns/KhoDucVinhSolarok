@@ -625,7 +625,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
   const handleDeleteInvoice = async (id: number) => {
     setConfirmDialog({
       isOpen: true,
-      message: "Bạn có chắc chắn muốn xóa hóa đơn này? Hành động này không thể hoàn tác.",
+      message: "Bạn có chắc chắn muốn chuyển hóa đơn này vào thùng rác?",
       onConfirm: async () => {
         setConfirmDialog(null);
         setErrorMsg('');
@@ -636,7 +636,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
           });
 
           if (res.ok) {
-            setSuccessMsg("Đã xóa hóa đơn thành công!");
+            setSuccessMsg("Đã chuyển hóa đơn vào thùng rác!");
             setShowDetailModal(false);
             loadInvoices();
             onInvoiceModified();

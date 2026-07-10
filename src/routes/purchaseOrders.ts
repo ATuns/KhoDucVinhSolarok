@@ -155,9 +155,15 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
     const page = parseInt(req.query.page as string) || 1;
     const limit = 10;
     const offset = (page - 1) * limit;
-    const { search, status, isRecorded, startDate, endDate, sort } = req.query;
+    const { search, status, isRecorded, startDate, endDate, sort, isDeleted } = req.query;
 
     let conditions = [];
+
+    if (isDeleted !== undefined) {
+      conditions.push(eq(purchaseOrders.isDeleted, isDeleted === 'true'));
+    } else {
+      conditions.push(eq(purchaseOrders.isDeleted, false));
+    }
 
     if (isRecorded !== undefined) {
       conditions.push(eq(purchaseOrders.isRecorded, isRecorded === 'true'));
@@ -561,14 +567,81 @@ purchaseOrdersRouter.delete("/purchase-orders/:id", requireAuth as any, async (r
     }
 
     if (existing.isRecorded) {
-      return res.status(400).json({ error: "Phiếu nhập đã ghi sổ. Vui lòng bỏ ghi sổ trước khi xóa." });
+      const items = await db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.poId, id));
+      
+      // Verification: Ensure enough stock exists BEFORE subtracting
+      for (const item of items) {
+        if (item.productId) {
+          const [product] = await db.select().from(products).where(eq(products.id, item.productId));
+          if (!product) {
+            return res.status(400).json({ error: `Sản phẩm với mã ${item.productCode} không tồn tại trong kho.` });
+          }
+          if (product.quantity < item.quantity) {
+            return res.status(400).json({
+              error: `Không thể xóa (bỏ ghi sổ). Sản phẩm "${item.productName}" (Mã: ${item.productCode}) hiện chỉ còn tồn kho thực tế: ${product.quantity}, không đủ để hoàn trả (cần giảm ${item.quantity}). Vui lòng kiểm tra lại.`
+            });
+          }
+        }
+      }
+
+      for (const item of items) {
+        if (item.productId) {
+          const [product] = await db.select().from(products).where(eq(products.id, item.productId));
+          if (product) {
+            const newQty = product.quantity - item.quantity;
+            await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
+            
+            await db.delete(stockTransactions)
+              .where(
+                and(
+                  eq(stockTransactions.productId, item.productId),
+                  eq(stockTransactions.type, 'NHAP'),
+                  eq(stockTransactions.docNumber, existing.documentCode)
+                )
+              );
+          }
+        }
+      }
+    }
+
+    await db.update(purchaseOrders).set({ 
+      isDeleted: true, 
+      deletedAt: new Date(),
+      isRecorded: false 
+    }).where(eq(purchaseOrders.id, id));
+    
+    res.json({ message: "Purchase order moved to trash" });
+  } catch (error: any) {
+    console.error("DELETE /api/purchase-orders/:id failed:", error);
+    res.status(500).json({ error: "Failed to move purchase order to trash" });
+  }
+});
+
+purchaseOrdersRouter.post("/purchase-orders/:id/restore", requireAuth as any, async (req: any, res: any) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.update(purchaseOrders).set({ isDeleted: false, deletedAt: null }).where(eq(purchaseOrders.id, id));
+    res.json({ message: "Purchase order restored successfully" });
+  } catch (error: any) {
+    console.error("RESTORE /api/purchase-orders/:id failed:", error);
+    res.status(500).json({ error: "Failed to restore purchase order" });
+  }
+});
+
+purchaseOrdersRouter.delete("/purchase-orders/:id/permanent", requireAuth as any, async (req: any, res: any) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [existing] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, id));
+    
+    if (!existing) {
+      return res.status(404).json({ error: "Purchase order not found" });
     }
 
     await db.delete(purchaseOrders).where(eq(purchaseOrders.id, id));
-    res.json({ message: "Purchase order deleted successfully" });
+    res.json({ message: "Purchase order deleted permanently" });
   } catch (error: any) {
-    console.error("DELETE /api/purchase-orders/:id failed:", error);
-    res.status(500).json({ error: "Failed to delete purchase order" });
+    console.error("PERMANENT DELETE /api/purchase-orders/:id failed:", error);
+    res.status(500).json({ error: "Failed to permanently delete purchase order" });
   }
 });
 

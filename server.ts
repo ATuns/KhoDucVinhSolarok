@@ -738,8 +738,27 @@ async function startServer() {
       const [product] = await db.select().from(products).where(eq(products.id, id));
       if (!product) return res.status(404).json({ error: "Product not found" });
       const txList = await db.select().from(stockTransactions).where(eq(stockTransactions.productId, id)).orderBy(asc(stockTransactions.createdAt), asc(stockTransactions.id));
+      
+      const groupedTxs: any[] = [];
+      const docTypeMap = new Map<string, any>();
+      
+      for (const tx of txList) {
+        if (tx.docNumber) {
+          const key = `${tx.docNumber}_${tx.type}`;
+          if (docTypeMap.has(key)) {
+            docTypeMap.get(key).quantity += tx.quantity;
+          } else {
+            const newTx = { ...tx };
+            docTypeMap.set(key, newTx);
+            groupedTxs.push(newTx);
+          }
+        } else {
+          groupedTxs.push(tx);
+        }
+      }
+
       let runningBalance = 0;
-      const enrichedList = txList.map(tx => {
+      const enrichedList = groupedTxs.map(tx => {
         if (tx.type === "NHAP" || tx.type === "BO_GHI_SO") {
           runningBalance += tx.quantity;
         } else if (tx.type === "XUAT" || tx.type === "GHI_SO") {
@@ -932,7 +951,8 @@ async function startServer() {
         .from(purchaseOrders)
         .where(and(
           eq(purchaseOrders.supplierId, supplierId),
-          eq(purchaseOrders.isRecorded, true)
+          eq(purchaseOrders.isRecorded, true),
+          eq(purchaseOrders.isDeleted, false)
         ))
         .orderBy(desc(purchaseOrders.createdAt));
         
@@ -1038,7 +1058,7 @@ async function startServer() {
       const customerId = parseInt(req.params.id);
       const list = await db.select()
         .from(invoices)
-        .where(eq(invoices.customerId, customerId))
+        .where(and(eq(invoices.customerId, customerId), eq(invoices.isDeleted, false)))
         .orderBy(desc(invoices.createdAt));
       res.json(list);
     } catch (error: any) {
@@ -1138,9 +1158,15 @@ async function startServer() {
       const page = parseInt(req.query.page as string) || 1;
       const limit = 10;
       const offset = (page - 1) * limit;
-      const { search, status, isRecorded, startDate, endDate, sort } = req.query;
+      const { search, status, isRecorded, startDate, endDate, sort, isDeleted } = req.query;
 
       let conditions = [];
+
+      if (isDeleted !== undefined) {
+        conditions.push(eq(invoices.isDeleted, isDeleted === 'true'));
+      } else {
+        conditions.push(eq(invoices.isDeleted, false));
+      }
 
       if (isRecorded !== undefined) {
         conditions.push(eq(invoices.isRecorded, isRecorded === 'true'));
@@ -1808,7 +1834,7 @@ async function startServer() {
     }
   });
 
-  // DELETE INVOICE
+  // SOFT DELETE INVOICE (Move to Trash)
   app.delete("/api/invoices/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1818,18 +1844,71 @@ async function startServer() {
         return res.status(404).json({ error: "Invoice not found" });
       }
 
-      // If recorded, force unrecord or fail
+      // Automatically unrecord if it is recorded
       if (invoice.isRecorded) {
-        return res.status(400).json({ error: "Hóa đơn đã ghi sổ. Vui lòng bỏ ghi sổ trước khi xóa." });
+        const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+        for (const itm of items) {
+          if (itm.productId) {
+            await db.update(products)
+              .set({
+                quantity: sql`${products.quantity} + ${itm.quantity}`,
+                updatedAt: new Date(),
+              })
+              .where(eq(products.id, itm.productId));
+              
+            await db.delete(stockTransactions)
+              .where(
+                and(
+                  eq(stockTransactions.productId, itm.productId),
+                  eq(stockTransactions.type, "GHI_SO"),
+                  eq(stockTransactions.docNumber, invoice.documentCode)
+                )
+              );
+          }
+        }
+      }
+
+      await db.update(invoices).set({ 
+        isDeleted: true, 
+        deletedAt: new Date(),
+        isRecorded: false // Force to false since it's now in trash
+      }).where(eq(invoices.id, id));
+      
+      res.json({ message: "Invoice moved to trash" });
+    } catch (error: any) {
+      console.error("DELETE invoice failed:", error);
+      res.status(500).json({ error: "Failed to move invoice to trash" });
+    }
+  });
+
+  // RESTORE INVOICE
+  app.post("/api/invoices/:id/restore", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await db.update(invoices).set({ isDeleted: false, deletedAt: null }).where(eq(invoices.id, id));
+      res.json({ message: "Invoice restored successfully" });
+    } catch (error: any) {
+      console.error("RESTORE invoice failed:", error);
+      res.status(500).json({ error: "Failed to restore invoice" });
+    }
+  });
+
+  // PERMANENT DELETE INVOICE
+  app.delete("/api/invoices/:id/permanent", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+
+      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+      if (!invoice) {
+        return res.status(404).json({ error: "Invoice not found" });
       }
 
       // Delete cascade is supported by foreign key setup in schema, but we double-verify
       await db.delete(invoices).where(eq(invoices.id, id));
-
-      res.json({ message: "Invoice deleted successfully" });
+      res.json({ message: "Invoice deleted permanently" });
     } catch (error: any) {
-      console.error("DELETE invoice failed:", error);
-      res.status(500).json({ error: "Failed to delete invoice" });
+      console.error("PERMANENT DELETE invoice failed:", error);
+      res.status(500).json({ error: "Failed to permanently delete invoice" });
     }
   });
 
@@ -1900,6 +1979,7 @@ async function startServer() {
       })
       .from(invoices)
       .leftJoin(customers, eq(invoices.customerId, customers.id))
+      .where(eq(invoices.isDeleted, false))
       .orderBy(desc(invoices.createdAt));
 
       const invoicesSheetData = dbInvoices.map(inv => {

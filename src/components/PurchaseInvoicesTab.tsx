@@ -574,7 +574,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
   const handleDeletePurchaseOrder = async (id: number) => {
     setConfirmDialog({
       isOpen: true,
-      message: "Bạn có chắc chắn muốn xóa phiếu nhập này? Hành động này không thể hoàn tác.",
+      message: "Bạn có chắc chắn muốn chuyển phiếu nhập này vào thùng rác?",
       onConfirm: async () => {
         setConfirmDialog(null);
         setErrorMsg('');
@@ -585,7 +585,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           });
 
           if (res.ok) {
-            setSuccessMsg("Đã xóa phiếu nhập thành công!");
+            setSuccessMsg("Đã chuyển phiếu nhập vào thùng rác!");
             setShowDetailModal(false);
             loadPurchaseOrders();
             onPurchaseOrderModified();

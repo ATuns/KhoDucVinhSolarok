@@ -55,6 +55,8 @@ export const invoices = pgTable('invoices', {
     .references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+  isDeleted: boolean('is_deleted').notNull().default(false),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // 5. Invoice Items table
@@ -144,6 +146,8 @@ export const purchaseOrders = pgTable('purchase_orders', {
     .references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+  isDeleted: boolean('is_deleted').notNull().default(false),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // 11. Purchase Order Items

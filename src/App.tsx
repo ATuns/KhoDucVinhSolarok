@@ -8,15 +8,16 @@ import { BankAccountsTab } from './components/BankAccountsTab.tsx';
 import { ReportTab } from './components/ReportTab.tsx';
 import { PurchaseInvoicesTab } from './components/PurchaseInvoicesTab.tsx';
 import { DebtTab } from './components/DebtTab.tsx';
+import { TrashTab } from './components/TrashTab.tsx';
 import { 
   Layers, Users, FileBarChart2, 
   LogOut, Sun, ShieldAlert, RefreshCw, LogIn, ChevronRight, Sliders, Settings,
-  ListOrdered, FileStack, CreditCard, Landmark, Menu, X, ClipboardList
+  ListOrdered, FileStack, CreditCard, Landmark, Menu, X, ClipboardList, Trash2
 } from 'lucide-react';
 
 function DashboardContent() {
   const { user, logout, fetchWithAuth } = useAuth();
-  const [activeTab, setActiveTab] = useState<'pending' | 'invoices' | 'purchase_invoices' | 'warehouse' | 'customers' | 'debts' | 'bank_accounts' | 'reports'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'invoices' | 'purchase_invoices' | 'warehouse' | 'customers' | 'debts' | 'bank_accounts' | 'reports' | 'trash'>('pending');
   
   // Shared triggers for real-time tab updates
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -310,6 +311,22 @@ function DashboardContent() {
               <Settings className="w-4 h-4 text-slate-500" />
               <span>Báo Cáo & Cấu Hình</span>
             </button>
+
+            <button
+              id="tab_trash"
+              onClick={() => {
+                setActiveTab('trash');
+                setIsSidebarOpen(false);
+              }}
+              className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold rounded-lg transition-all ${
+                activeTab === 'trash' 
+                  ? 'bg-rose-50 text-rose-700 shadow-2xs border border-rose-100/30' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950 border border-transparent'
+              }`}
+            >
+              <Trash2 className="w-4 h-4 text-rose-500" />
+              <span>Thùng Rác</span>
+            </button>
           </nav>
         </div>
 
@@ -424,6 +441,9 @@ function DashboardContent() {
 
         {activeTab === 'reports' && (
           <ReportTab />
+        )}
+        {activeTab === 'trash' && (
+          <TrashTab />
         )}
       </main>
 
