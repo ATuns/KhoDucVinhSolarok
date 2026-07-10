@@ -2070,7 +2070,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
 
                     <button
                       onClick={() => handleDeletePurchaseOrder(selectedPurchaseOrder.id)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors ml-6"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>Xóa Phiếu Nhập</span>
