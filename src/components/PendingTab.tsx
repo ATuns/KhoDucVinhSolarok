@@ -9,6 +9,8 @@ import {
 export const PendingTab: React.FC<{ refreshTrigger: number; onRecordedSuccess: () => void }> = ({ refreshTrigger, onRecordedSuccess }) => {
   const { fetchWithAuth } = useAuth();
   const [pendingList, setPendingList] = useState<Invoice[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -20,13 +22,14 @@ export const PendingTab: React.FC<{ refreshTrigger: number; onRecordedSuccess: (
   const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; message: string; onConfirm: () => void } | null>(null);
 
   const loadPendingInvoices = async () => {
-    setLoading(true);
+       setLoading(true);
     try {
       // Load all unrecorded invoices (isRecorded = false)
-      const res = await fetchWithAuth('/api/invoices?isRecorded=false');
+      const res = await fetchWithAuth(`/api/invoices?isRecorded=false&page=${currentPage}`);
       if (res.ok) {
         const data = await res.json();
         setPendingList(data.invoices || []);
+        setTotalPages(data.totalPages || 1);
       } else {
         throw new Error("Không thể tải danh sách hóa đơn chờ");
       }
@@ -39,7 +42,7 @@ export const PendingTab: React.FC<{ refreshTrigger: number; onRecordedSuccess: (
 
   useEffect(() => {
     loadPendingInvoices();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, currentPage]);
 
   const toggleSelect = (id: number) => {
     if (selectedIds.includes(id)) {
@@ -297,7 +300,58 @@ export const PendingTab: React.FC<{ refreshTrigger: number; onRecordedSuccess: (
 
         </div>
       )}
-
+     
+        {totalPages > 1 && (
+          <div className="mt-4 flex items-center justify-between border-t border-slate-100 bg-white p-3 rounded-xl shadow-xs">
+            <div className="flex flex-1 justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Trang trước
+              </button>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Trang sau
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-slate-700">
+                  Trang <span className="font-semibold">{currentPage}</span> / <span className="font-semibold">{totalPages}</span>
+                </p>
+              </div>
+              <div>
+                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Next</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
       {/* Confirm Dialog */}
       {confirmDialog && confirmDialog.isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity">
