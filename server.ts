@@ -1529,6 +1529,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             });
           }
         }
+        let totalAmount = existing.totalAmount;
 
         // If we are in draft mode and items are sent, recreate them
         if (!existing.isRecorded && items && Array.isArray(items)) {
