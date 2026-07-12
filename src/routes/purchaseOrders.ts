@@ -43,8 +43,8 @@ function updateCodeWithNewDate(code: string | null | undefined, newDate: Date): 
   return parts.join('-');
 }
 
-async function generatePOCodes(status: string) {
-  const now = new Date();
+async function generatePOCodes(status: string, targetDate: Date = new Date()) {
+  const now = targetDate;
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
@@ -52,9 +52,9 @@ async function generatePOCodes(status: string) {
   const yyyymmdd = `${yyyy}${mm}${dd}`;
   const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
   
-  const startOfDay = new Date();
+  const startOfDay = new Date(targetDate);
   startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date();
+  const endOfDay = new Date(targetDate);
   endOfDay.setHours(23, 59, 59, 999);
   
   const todayPOs = await db.select({ documentCode: purchaseOrders.documentCode })
@@ -469,20 +469,30 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
         totalAmount = items.reduce((sum: number, item: any) => sum + (item.quantity * item.price), 0);
       }
 
-      let updateStatus = existing.status;
-      let newDocumentCode = existing.documentCode;
+      const oldCreatedAt = existing.createdAt ? new Date(existing.createdAt) : new Date();
+      const newCreatedAt = createdAt ? new Date(createdAt) : oldCreatedAt;
 
+      let dateChanged = false;
+      if (oldCreatedAt.getFullYear() !== newCreatedAt.getFullYear() || 
+          oldCreatedAt.getMonth() !== newCreatedAt.getMonth() || 
+          oldCreatedAt.getDate() !== newCreatedAt.getDate()) {
+        dateChanged = true;
+      }
+      
+      let updateStatus = existing.status;
       if (status && status !== existing.status) {
         updateStatus = status;
-        newDocumentCode = await getRegeneratedPODocumentCode(id, status);
       }
 
-      const newCreatedAt = createdAt ? new Date(createdAt) : (existing.createdAt ? new Date(existing.createdAt) : new Date());
+      let newDocumentCode = existing.documentCode;
+      if (dateChanged || status !== existing.status) {
+         const codes = await generatePOCodes(updateStatus, newCreatedAt);
+         newDocumentCode = codes.documentCode;
+      }
 
-      newDocumentCode = updateCodeWithNewDate(newDocumentCode, newCreatedAt);
       const originalPoNumber = poNumber !== undefined ? (String(poNumber).trim() || "0") : existing.poNumber;
-      const finalPoNumber = updateCodeWithNewDate(originalPoNumber, newCreatedAt);
-
+      const finalPoNumber = dateChanged ? updateCodeWithNewDate(originalPoNumber, newCreatedAt) : originalPoNumber;
+      
       await db.update(purchaseOrders)
         .set({
           poNumber: finalPoNumber,
