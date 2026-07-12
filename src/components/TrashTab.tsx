@@ -8,7 +8,8 @@ export const TrashTab: React.FC = () => {
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<'invoices' | 'purchase_orders'>('invoices');
-  
+    const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [showConfirm, setShowConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{id: number, docType: string} | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -18,17 +19,20 @@ export const TrashTab: React.FC = () => {
   const fetchTrash = async () => {
     setLoading(true);
     try {
-      const [invRes, poRes] = await Promise.all([
-        fetchWithAuth(`/api/invoices?isDeleted=true`),
-        fetchWithAuth(`/api/purchase-orders?isDeleted=true`)
-      ]);
-      if (invRes.ok) {
-        const data = await invRes.json();
-        setInvoices(data.invoices || []);
-      }
-      if (poRes.ok) {
-        const data = await poRes.json();
-        setPurchaseOrders(data.purchaseOrders || []);
+      if (activeSubTab === 'invoices') {
+        const invRes = await fetchWithAuth(`/api/invoices?isDeleted=true&page=${currentPage}`);
+        if (invRes.ok) {
+          const data = await invRes.json();
+          setInvoices(data.invoices || []);
+          setTotalPages(data.totalPages || 1);
+        }
+      } else {
+        const poRes = await fetchWithAuth(`/api/purchase-orders?isDeleted=true&page=${currentPage}`);
+        if (poRes.ok) {
+          const data = await poRes.json();
+          setPurchaseOrders(data.purchaseOrders || []);
+          setTotalPages(data.totalPages || 1);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -37,9 +41,9 @@ export const TrashTab: React.FC = () => {
     }
   };
 
-  useEffect(() => {
+   useEffect(() => {
     fetchTrash();
-  }, []);
+  }, [activeSubTab, currentPage]);
 
   const handleRestore = async (id: number, type: 'invoices' | 'purchase-orders') => {
     try {
@@ -117,16 +121,16 @@ export const TrashTab: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
         <div className="flex border-b border-slate-200">
           <button
-            onClick={() => setActiveSubTab('invoices')}
+            onClick={() => { setActiveSubTab('invoices'); setCurrentPage(1); }}
             className={`flex-1 py-3 text-sm font-bold transition-colors ${activeSubTab === 'invoices' ? 'bg-slate-50 text-emerald-700 border-b-2 border-emerald-500' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
           >
             Hóa Đơn ({invoices.length})
           </button>
           <button
-            onClick={() => setActiveSubTab('purchase_orders')}
+            onClick={() => { setActiveSubTab('purchase_orders'); setCurrentPage(1); }}
             className={`flex-1 py-3 text-sm font-bold transition-colors ${activeSubTab === 'purchase_orders' ? 'bg-slate-50 text-blue-700 border-b-2 border-blue-500' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}
           >
             Phiếu Nhập ({purchaseOrders.length})
@@ -190,7 +194,57 @@ export const TrashTab: React.FC = () => {
           )}
         </div>
       </div>
-
+   {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between border-t border-slate-100 bg-white p-3 rounded-b-xl">
+          <div className="flex flex-1 justify-between sm:hidden">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Trang trước
+            </button>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Trang sau
+            </button>
+          </div>
+          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-slate-700">
+                Trang <span className="font-semibold">{currentPage}</span> / <span className="font-semibold">{totalPages}</span>
+              </p>
+            </div>
+            <div>
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Previous</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                >
+                  <span className="sr-only">Next</span>
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
       {showConfirm && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
