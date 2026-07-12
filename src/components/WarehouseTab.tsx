@@ -49,13 +49,6 @@ export const WarehouseTab: React.FC = () => {
   const [newQuantity, setNewQuantity] = useState(0);
   const [newMinStock, setNewMinStock] = useState(10);
 
-  // Form states for Stock Transaction
-  const [showTxModal, setShowTxModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [txType, setTxType] = useState<'NHAP' | 'XUAT'>('NHAP');
-  const [txQty, setTxQty] = useState(1);
-  const [txNote, setTxNote] = useState('');
-
   // History state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyProduct, setHistoryProduct] = useState<Product | null>(null);
@@ -206,39 +199,6 @@ export const WarehouseTab: React.FC = () => {
       setNewPrice(0);
       setNewQuantity(0);
       setNewMinStock(10);
-      fetchProducts();
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const handleStockAction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProduct) return;
-    setError('');
-    setSuccessMsg('');
-
-    try {
-      const res = await fetchWithAuth('/api/products/stock-transaction', {
-        method: 'POST',
-        body: JSON.stringify({
-          productId: selectedProduct.id,
-          type: txType,
-          quantity: txQty,
-          note: txNote.trim(),
-          warehouseId: selectedWarehouse?.id,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Lỗi thực hiện giao dịch kho");
-      }
-
-      setSuccessMsg(`${txType === 'NHAP' ? 'Nhập kho' : 'Xuất kho'} thành công sản phẩm: ${selectedProduct.name}`);
-      setShowTxModal(false);
-      setTxQty(1);
-      setTxNote('');
       fetchProducts();
     } catch (err: any) {
       setError(err.message);
@@ -639,17 +599,6 @@ export const WarehouseTab: React.FC = () => {
                       </td>
                       <td className="py-1.5 px-3">
                         <div className="flex items-center justify-center gap-1.5">
-                           <button
-                            onClick={() => {
-                              setSelectedProduct(product);
-                              setTxType('NHAP');
-                              setShowTxModal(true);
-                            }}
-                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
-                            title="Nhập xuất kho"
-                          >
-                            <SlidersHorizontal className="w-3.5 h-3.5" />
-                          </button>
                           
                           <button
                             onClick={() => viewStockHistory(product)}
@@ -838,89 +787,6 @@ export const WarehouseTab: React.FC = () => {
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
                 >
                   {editProductId ? 'Cập Nhật Thiết Bị' : 'Lưu thiết bị'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Stock Transaction Modal (Nhập/Xuất kho thủ công) */}
-      {showTxModal && selectedProduct && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <h3 className="font-display font-semibold text-slate-800">Điều Chỉnh Kho Vật Tư</h3>
-                <p className="text-xs text-slate-500 font-mono mt-0.5">{selectedProduct.code} - {selectedProduct.name}</p>
-              </div>
-              <button onClick={() => setShowTxModal(false)} className="text-slate-400 hover:text-slate-600 text-lg">×</button>
-            </div>
-            
-            <form onSubmit={handleStockAction} className="p-5 space-y-4">
-              <div className="flex gap-4">
-                <label className="flex-1 flex items-center justify-center gap-2 border rounded-lg p-3 cursor-pointer transition-all hover:bg-slate-50 border-emerald-200 has-checked:bg-emerald-50/50 has-checked:border-emerald-500">
-                  <input
-                    type="radio"
-                    name="tx_type"
-                    checked={txType === 'NHAP'}
-                    onChange={() => setTxType('NHAP')}
-                    className="accent-emerald-600"
-                  />
-                  <span className="text-sm font-semibold text-emerald-700 flex items-center gap-1">
-                    <ArrowDownRight className="w-4 h-4 text-emerald-500" /> Nhập Kho (+)
-                  </span>
-                </label>
-                
-                <label className="flex-1 flex items-center justify-center gap-2 border rounded-lg p-3 cursor-pointer transition-all hover:bg-slate-50 border-red-200 has-checked:bg-red-50/50 has-checked:border-red-500">
-                  <input
-                    type="radio"
-                    name="tx_type"
-                    checked={txType === 'XUAT'}
-                    onChange={() => setTxType('XUAT')}
-                    className="accent-red-600"
-                  />
-                  <span className="text-sm font-semibold text-red-700 flex items-center gap-1">
-                    <ArrowUpRight className="w-4 h-4 text-red-500" /> Xuất Kho (-)
-                  </span>
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Số Lượng Giao Dịch</label>
-                <QuantityInput
-                  value={txQty}
-                  onChange={(val) => setTxQty(val)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-semibold text-slate-800"
-                />
-                <p className="text-xs text-slate-400 mt-1">Hàng tồn hiện tại: <b>{formatQuantity(selectedProduct.quantity)}</b></p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Lý Do / Ghi Chú</label>
-                <textarea
-                  placeholder="Ví dụ: Nhập hàng từ nhà máy Canadian Solar..."
-                  value={txNote}
-                  onChange={(e) => setTxNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none h-20 resize-none"
-                />
-              </div>
-
-              <div className="flex gap-2 justify-end pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowTxModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 text-sm font-medium rounded-lg transition-colors"
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  type="submit"
-                  className={`px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors shadow-sm ${
-                    txType === 'NHAP' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'
-                  }`}
-                >
-                  {txType === 'NHAP' ? 'Xác nhận Nhập Kho' : 'Xác nhận Xuất Kho'}
                 </button>
               </div>
             </form>
