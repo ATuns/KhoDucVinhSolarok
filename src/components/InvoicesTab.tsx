@@ -2028,8 +2028,8 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                     </div>
                   </div>
 
-                  {selectedInvoice.status.startsWith('CK') && (
-                    <div className="flex gap-2 items-center mb-4 p-2 bg-blue-50/50 rounded-lg border border-blue-100">
+                                  {selectedInvoice.status.startsWith('CK') && (
+                    <div className="flex gap-2 items-center mb-4 p-2 bg-blue-50/50 rounded-lg border border-blue-100 w-[385px]">
                       <span className="text-[10px] font-bold text-slate-500 uppercase">Tài khoản nhận:</span>
                       <select
                         value={selectedInvoice.status.startsWith('CK - ') ? selectedInvoice.status.substring(5) : ''}
@@ -2037,7 +2037,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                           const val = e.target.value;
                           handleChangeStatus(selectedInvoice.id, val ? `CK - ${val}` : 'CK');
                         }}
-                        className="px-2 py-1 text-xs border border-slate-200 rounded font-semibold text-slate-700 outline-none focus:border-blue-400"
+                        className="px-2 py-1 text-xs border border-slate-200 rounded font-semibold text-slate-700 outline-none focus:border-blue-400 w-[300px]"
                       >
                         <option value="">-- Tùy chọn --</option>
                         {bankAccounts.map(b => {
@@ -2085,12 +2085,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                      <span>Xuất Excel</span>
+                                        <span>Xuất Excel</span>
                     </button>
 
+                    <div className="flex-1 min-w-[20px]"></div>
+                    <div className="w-px h-8 bg-slate-300 mx-1 hidden lg:block"></div>
                     <button
                       onClick={() => handleDeleteInvoice(selectedInvoice.id)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors ml-6"
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors lg:ml-2"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>Xóa Hóa Đơn</span>
