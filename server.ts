@@ -93,8 +93,8 @@ async function startServer() {
   }
   
   // Generate code and number for a new invoice
-  async function generateInvoiceCodes(status: string) {
-    const now = new Date();
+async function generateInvoiceCodes(status: string, targetDate: Date = new Date()) {
+    const now = typeof targetDate !== "undefined" ? targetDate : new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
@@ -103,9 +103,9 @@ async function startServer() {
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
     
     // Daily sequence based on invoices created today
-    const startOfDay = new Date();
+    const startOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
+    const endOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
     const todayInvoices = await db.select({ documentCode: invoices.documentCode })
@@ -220,8 +220,8 @@ async function startServer() {
   }
 
   // Generate code and number for a new Purchase Order
-  async function generatePOCodes(status: string) {
-    const now = new Date();
+  async function generatePOCodes(status: string, targetDate: Date = new Date()) {
+    const now = typeof targetDate !== "undefined" ? targetDate : new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
@@ -230,9 +230,9 @@ async function startServer() {
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
     
     // Daily sequence based on POs created today
-    const startOfDay = new Date();
+    const startOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
+    const endOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
     const todayPOs = await db.select({ documentCode: purchaseOrders.documentCode })
@@ -1466,23 +1466,33 @@ async function startServer() {
           return res.status(400).json({ error: "Hóa đơn đã ghi sổ. Vui lòng BỎ GHI SỔ trước khi chỉnh sửa danh sách sản phẩm." });
         }
 
-        const newCreatedAt = createdAt ? new Date(createdAt) : (existing.createdAt ? new Date(existing.createdAt) : new Date());
+             
+        const oldCreatedAt = existing.createdAt ? new Date(existing.createdAt) : new Date();
+        const newCreatedAt = createdAt ? new Date(createdAt) : oldCreatedAt;
+
+        let dateChanged = false;
+        if (oldCreatedAt.getFullYear() !== newCreatedAt.getFullYear() || 
+            oldCreatedAt.getMonth() !== newCreatedAt.getMonth() || 
+            oldCreatedAt.getDate() !== newCreatedAt.getDate()) {
+          dateChanged = true;
+        }
 
         let docCode = existing.documentCode;
         let updateStatus = existing.status;
         if (status && status !== existing.status) {
           updateStatus = status;
-          docCode = await getRegeneratedDocumentCode(id, status);
-        } else if (documentCode) {
-          docCode = documentCode; // support custom update
         }
 
-        docCode = updateCodeWithNewDate(docCode, newCreatedAt);
+        if (dateChanged || status !== existing.status) {
+           const codes = await generateInvoiceCodes(updateStatus, newCreatedAt);
+           docCode = codes.documentCode;
+        } else if (documentCode) {
+           docCode = documentCode; 
+        }
+
         const originalInvoiceNumber = invoiceNumber !== undefined ? (String(invoiceNumber).trim() || "0") : existing.invoiceNumber;
-        const finalInvoiceNumber = updateCodeWithNewDate(originalInvoiceNumber, newCreatedAt);
-
-        let totalAmount = existing.totalAmount;
-
+        const finalInvoiceNumber = dateChanged ? updateCodeWithNewDate(originalInvoiceNumber, newCreatedAt) : originalInvoiceNumber;
+        
         // Update basic fields
         await db.update(invoices)
           .set({
