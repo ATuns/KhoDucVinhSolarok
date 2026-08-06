@@ -26,9 +26,11 @@ import { requireAuth, AuthRequest } from "./src/middleware/auth.ts";
 import { purchaseOrdersRouter } from "./src/routes/purchaseOrders.ts";
 import { debtsRouter } from "./src/routes/debts.ts";
 import * as xlsx from "xlsx";
+
 async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
+
   // Ensure unaccent extension is created in the database
   try {
     await db.execute(sql`CREATE EXTENSION IF NOT EXISTS unaccent;`);
@@ -36,6 +38,7 @@ async function startServer() {
   } catch (error) {
     console.error("Failed to ensure 'unaccent' extension on startup:", error);
   }
+
   // Ensure columns are double precision
   try {
     await db.execute(sql`ALTER TABLE invoice_items ALTER COLUMN price TYPE double precision;`);
@@ -49,15 +52,19 @@ async function startServer() {
   } catch (error) {
     console.error("Failed to alter tables:", error);
   }
+
   // Detect unaccent support dynamically
   await detectUnaccentSupport();
+
   app.use(express.json({ limit: '50mb' }));
+
   app.use("/api", purchaseOrdersRouter);
   app.use("/api", debtsRouter);
+
   // ---------------------------------------------------------------------------
   // HELPER FUNCTIONS
   // ---------------------------------------------------------------------------
-  
+
   function updateCodeWithNewDate(code: string | null | undefined, newDate: Date): string {
     if (!code) return "";
     const parts = code.split('-');
@@ -66,6 +73,7 @@ async function startServer() {
     const dd = String(newDate.getDate()).padStart(2, '0');
     const yyyymmdd = `${yyyy}${mm}${dd}`;
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
+
     if (parts.length === 3) {
       const prefix = parts[0];
       if (prefix === 'TM' || prefix === 'CK') {
@@ -90,23 +98,23 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
-    
+
     const yyyymmdd = `${yyyy}${mm}${dd}`;
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
-    
+
     // Daily sequence based on invoices created today
     const startOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
     endOfDay.setHours(23, 59, 59, 999);
-    
+
     const todayInvoices = await db.select({ documentCode: invoices.documentCode })
       .from(invoices)
       .where(and(
         sql`${invoices.createdAt} >= ${startOfDay}`,
         sql`${invoices.createdAt} <= ${endOfDay}`
       ));
-      
+
     let maxSeq = 0;
     for (const inv of todayInvoices) {
       if (inv.documentCode) {
@@ -120,16 +128,16 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         }
       }
     }
-      
+
     const sequenceNum = maxSeq + 1;
     let attempt = 0;
     let documentCode = '';
     let invoiceNumber = '';
-    
+
     while(true) {
         const currentSeq = sequenceNum + attempt;
         const xxx = String(currentSeq).padStart(3, '0');
-        
+
         if (status === 'CTT') {
           documentCode = `CTT-${yyyymmdd}-${xxx}`;
         } else if (status === 'TM') {
@@ -137,31 +145,32 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         } else {
           documentCode = `CK-${yymmdd}-${xxx}`;
         }
-        
+
         invoiceNumber = `HD-${yyyymmdd}-${xxx}`;
-        
+
         const existing = await db.select({id: invoices.id}).from(invoices).where(eq(invoices.documentCode, documentCode));
         if (existing.length === 0) {
             break;
         }
         attempt++;
     }
-    
+
     return { documentCode, invoiceNumber };
   }
+
   // Regenerate document code for an existing invoice when its status changes
   async function getRegeneratedDocumentCode(invoiceId: number, newStatus: string) {
     const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
     if (!invoice) throw new Error("Invoice not found");
-    
+
     const date = invoice.createdAt ? new Date(invoice.createdAt) : new Date();
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
-    
+
     const yyyymmdd = `${yyyy}${mm}${dd}`;
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
-    
+
     // Extract suffix or regenerate
     let sequenceNum = 1;
     const parts = invoice.documentCode.split('-');
@@ -171,13 +180,13 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         sequenceNum = parseInt(lastPart, 10);
       }
     }
-    
+
     let attempt = 0;
     let documentCode = '';
     while(true) {
         const currentSeq = sequenceNum + attempt;
         const xxx = String(currentSeq).padStart(3, '0');
-        
+
         if (newStatus === 'CTT') {
           documentCode = `CTT-${yyyymmdd}-${xxx}`;
         } else if (newStatus === 'TM') {
@@ -185,16 +194,17 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         } else {
           documentCode = `CK-${yymmdd}-${xxx}`;
         }
-        
+
         const existing = await db.select({id: invoices.id}).from(invoices).where(eq(invoices.documentCode, documentCode));
         if (existing.length === 0 || existing[0].id === invoiceId) {
             break;
         }
         attempt++;
     }
-    
+
     return documentCode;
   }
+
   // Log changes for an invoice
   async function logInvoiceAction(invoiceId: number, action: string, details: string, email: string) {
     try {
@@ -208,29 +218,30 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       console.error("Failed to write invoice log:", err);
     }
   }
+
   // Generate code and number for a new Purchase Order
   async function generatePOCodes(status: string, targetDate: Date = new Date()) {
     const now = typeof targetDate !== "undefined" ? targetDate : new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
-    
+
     const yyyymmdd = `${yyyy}${mm}${dd}`;
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
-    
+
     // Daily sequence based on POs created today
     const startOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
     endOfDay.setHours(23, 59, 59, 999);
-    
+
     const todayPOs = await db.select({ documentCode: purchaseOrders.documentCode })
       .from(purchaseOrders)
       .where(and(
         sql`${purchaseOrders.createdAt} >= ${startOfDay}`,
         sql`${purchaseOrders.createdAt} <= ${endOfDay}`
       ));
-      
+
     let maxSeq = 0;
     for (const po of todayPOs) {
       if (po.documentCode) {
@@ -244,16 +255,16 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         }
       }
     }
-      
+
     const sequenceNum = maxSeq + 1;
     let attempt = 0;
     let documentCode = '';
     let poNumber = '';
-    
+
     while(true) {
         const currentSeq = sequenceNum + attempt;
         const xxx = String(currentSeq).padStart(3, '0');
-        
+
         if (status === 'CTT') {
           documentCode = `PN-CTT-${yyyymmdd}-${xxx}`;
         } else if (status === 'TM') {
@@ -261,31 +272,32 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         } else {
           documentCode = `PN-CK-${yymmdd}-${xxx}`;
         }
-        
+
         poNumber = `PN-${yyyymmdd}-${xxx}`;
-        
+
         const existing = await db.select({id: purchaseOrders.id}).from(purchaseOrders).where(eq(purchaseOrders.documentCode, documentCode));
         if (existing.length === 0) {
             break;
         }
         attempt++;
     }
-    
+
     return { documentCode, poNumber };
   }
+
   // Regenerate document code for an existing PO when its status changes
   async function getRegeneratedPODocumentCode(poId: number, newStatus: string) {
     const [po] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, poId));
     if (!po) throw new Error("PO not found");
-    
+
     const date = po.createdAt ? new Date(po.createdAt) : new Date();
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
-    
+
     const yyyymmdd = `${yyyy}${mm}${dd}`;
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
-    
+
     // Extract suffix or regenerate
     let sequenceNum = 1;
     const parts = po.documentCode.split('-');
@@ -295,13 +307,13 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         sequenceNum = parseInt(lastPart, 10);
       }
     }
-    
+
     let attempt = 0;
     let documentCode = '';
     while(true) {
         const currentSeq = sequenceNum + attempt;
         const xxx = String(currentSeq).padStart(3, '0');
-        
+
         if (newStatus === 'CTT') {
           documentCode = `PN-CTT-${yyyymmdd}-${xxx}`;
         } else if (newStatus === 'TM') {
@@ -309,16 +321,17 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         } else {
           documentCode = `PN-CK-${yymmdd}-${xxx}`;
         }
-        
+
         const existing = await db.select({id: purchaseOrders.id}).from(purchaseOrders).where(eq(purchaseOrders.documentCode, documentCode));
         if (existing.length === 0 || existing[0].id === poId) {
             break;
         }
         attempt++;
     }
-    
+
     return documentCode;
   }
+
   // Log changes for a PO
   async function logPOAction(poId: number, action: string, details: string, email: string) {
     try {
@@ -332,13 +345,16 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       console.error("Failed to write PO log:", err);
     }
   }
+
   // ---------------------------------------------------------------------------
   // API ENDPOINTS
   // ---------------------------------------------------------------------------
+
   // Test Endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
+
   // Danger Zone - Wipe All Data Endpoint
   app.post("/api/danger/wipe-all-data", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -346,7 +362,8 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       if (password !== "atuan0987231270") {
         return res.status(403).json({ error: "Mật khẩu không chính xác" });
       }
-      
+
+
       await db.transaction(async (tx) => {
         // Delete child records first
         await tx.delete(invoiceItems);
@@ -357,6 +374,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         await tx.delete(purchaseOrderDeposits);
         await tx.delete(purchaseOrderLogs);
         await tx.delete(warehouseStocks);
+
         // Delete main records
         await tx.delete(invoices);
         await tx.delete(purchaseOrders);
@@ -366,12 +384,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         await tx.delete(bankAccounts);
         await tx.delete(warehouses);
       });
+
       res.json({ success: true, message: "Đã xóa sạch toàn bộ dữ liệu hệ thống thành công!" });
     } catch (error: any) {
       console.error("Wipe all data failed:", error);
       res.status(500).json({ error: "Không thể xóa dữ liệu hệ thống" });
     }
   });
+
   app.get("/api/database/export", requireAuth, async (req: AuthRequest, res) => {
     try {
       const data = {
@@ -398,13 +418,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to export data: " + err.message });
     }
   });
+
   app.post("/api/database/import", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { password, data } = req.body;
       if (password !== "atuan0987231270") {
         return res.status(403).json({ error: "Mật khẩu không chính xác" });
       }
-      
+
       // Convert date strings to Date objects
       function convertDates(obj: any) {
         if (obj === null || obj === undefined) return;
@@ -419,6 +440,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         }
       }
       convertDates(data);
+
       await db.transaction(async (tx) => {
         // Delete child records first
         await tx.delete(invoiceItems);
@@ -429,7 +451,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         await tx.delete(purchaseOrderDeposits);
         await tx.delete(purchaseOrderLogs);
         await tx.delete(warehouseStocks);
-        
+
         // Delete main records
         await tx.delete(invoices);
         await tx.delete(purchaseOrders);
@@ -439,6 +461,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         await tx.delete(bankAccounts);
         await tx.delete(warehouses);
         await tx.delete(users);
+
         // Insert records (order is important for foreign keys)
         if (data.users?.length) await tx.insert(users).values(data.users);
         if (data.warehouses?.length) await tx.insert(warehouses).values(data.warehouses);
@@ -456,7 +479,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         if (data.deposits?.length) await tx.insert(deposits).values(data.deposits);
         if (data.invoiceLogs?.length) await tx.insert(invoiceLogs).values(data.invoiceLogs);
         if (data.stockTransactions?.length) await tx.insert(stockTransactions).values(data.stockTransactions);
-        
+
         // Postgres sequences need to be reset since we insert explicit IDs
         await tx.execute(sql`SELECT setval('users_id_seq', COALESCE((SELECT MAX(id)+1 FROM users), 1), false)`);
         await tx.execute(sql`SELECT setval('warehouses_id_seq', COALESCE((SELECT MAX(id)+1 FROM warehouses), 1), false)`);
@@ -475,13 +498,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         await tx.execute(sql`SELECT setval('invoice_logs_id_seq', COALESCE((SELECT MAX(id)+1 FROM invoice_logs), 1), false)`);
         await tx.execute(sql`SELECT setval('stock_transactions_id_seq', COALESCE((SELECT MAX(id)+1 FROM stock_transactions), 1), false)`);
       });
-      
+
       res.json({ success: true, message: "Nhập dữ liệu thành công" });
     } catch (err: any) {
       console.error("Database import failed:", err);
       res.status(500).json({ error: "Failed to import data: " + err.message });
     }
   });
+
   // --- WAREHOUSES ---
   app.get("/api/warehouses", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -491,6 +515,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load warehouses" });
     }
   });
+
   app.post("/api/warehouses", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { code, name, address, note } = req.body;
@@ -504,6 +529,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to create warehouse" });
     }
   });
+
   app.put("/api/warehouses/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { code, name, address, note } = req.body;
@@ -517,6 +543,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to update warehouse" });
     }
   });
+
   app.delete("/api/warehouses/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       await db.delete(warehouses).where(eq(warehouses.id, Number(req.params.id)));
@@ -525,6 +552,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to delete warehouse" });
     }
   });
+
   // --- PRODUCTS ---
   app.get("/api/products", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -573,8 +601,10 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           ), 0
         )
       `.mapWith(Number);
+
       if (lowStock === "true") conditions.push(sql`${dynamicQuantityQuery} <= ${products.minStock}`);
       if (inStock === "true") conditions.push(sql`${dynamicQuantityQuery} > 0`);
+
       const query = db.select({
         id: products.id,
         code: products.code,
@@ -600,6 +630,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load products" });
     }
   });
+
   app.post("/api/products", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { code, name, category, unit, quantity, price, minStock, warehouseId } = req.body;
@@ -635,6 +666,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to create product" });
     }
   });
+
   app.put("/api/products/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -656,6 +688,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to update product" });
     }
   });
+
   app.patch("/api/products/:id/hide", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -667,6 +700,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to hide product" });
     }
   });
+
   app.post("/api/products/stock-transaction", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { productId, type, quantity, note, warehouseId } = req.body;
@@ -698,16 +732,17 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to perform stock action" });
     }
   });
+
   app.get("/api/products/:id/transactions", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const [product] = await db.select().from(products).where(eq(products.id, id));
       if (!product) return res.status(404).json({ error: "Product not found" });
       const txList = await db.select().from(stockTransactions).where(eq(stockTransactions.productId, id)).orderBy(asc(stockTransactions.createdAt), asc(stockTransactions.id));
-      
+
       const groupedTxs: any[] = [];
       const docTypeMap = new Map<string, any>();
-      
+
       for (const tx of txList) {
         if (tx.docNumber) {
           const key = `${tx.docNumber}_${tx.type}`;
@@ -722,6 +757,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           groupedTxs.push(tx);
         }
       }
+
       let runningBalance = 0;
       const enrichedList = groupedTxs.map(tx => {
         if (tx.type === "NHAP" || tx.type === "BO_GHI_SO") {
@@ -737,6 +773,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load history" });
     }
   });
+
   app.post("/api/products/import", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { items, warehouseId } = req.body;
@@ -753,12 +790,12 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         const qty = Number(quantity) || 0;
         const prc = Math.round(Number(price)) || 0;
         const mst = Math.round(Number(minStock)) || 10;
-        
+
         if (existing) {
           const nm = String(name).trim() || existing.name;
           const cat = category ? String(category).trim() : existing.category;
           const unt = unit ? String(unit).trim() : existing.unit;
-          
+
           await db.update(products).set({
             name: nm,
             category: cat,
@@ -768,7 +805,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             minStock: minStock !== undefined && minStock !== "" ? mst : existing.minStock,
             updatedAt: new Date()
           }).where(eq(products.id, existing.id));
-          
+
           if (qty !== undefined && quantity !== "" && qty !== existing.quantity) {
              const diff = qty - existing.quantity;
              await db.insert(stockTransactions).values({
@@ -780,10 +817,11 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
                warehouseId: Number(warehouseId)
              });
           }
-          
+
           updatedCount++;
           continue; 
         }
+
         const [newProd] = await db.insert(products)
           .values({
             code: trimmedCode,
@@ -815,6 +853,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to import products" });
     }
   });
+
   // --- SUPPLIERS ---
   app.get("/api/suppliers", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -853,12 +892,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load suppliers" });
     }
   });
+
   app.post("/api/suppliers", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { name, phone, address, taxId } = req.body;
       if (!name) {
         return res.status(400).json({ error: "Supplier name is required" });
       }
+
       const [newSupp] = await db.insert(suppliers)
         .values({
           name: name.trim(),
@@ -867,12 +908,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           taxId: taxId ? taxId.trim() : null,
         })
         .returning();
+
       res.status(201).json(newSupp);
     } catch (error: any) {
       console.error("POST /api/suppliers failed:", error);
       res.status(500).json({ error: "Failed to create supplier" });
     }
   });
+
   app.put("/api/suppliers/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -880,6 +923,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       if (!name) {
         return res.status(400).json({ error: "Supplier name is required" });
       }
+
       const [updated] = await db.update(suppliers)
         .set({
           name: name.trim(),
@@ -889,6 +933,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         })
         .where(eq(suppliers.id, id))
         .returning();
+
       if (!updated) {
         return res.status(404).json({ error: "Supplier not found" });
       }
@@ -898,10 +943,11 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to update supplier" });
     }
   });
+
   app.get("/api/suppliers/:id/history", requireAuth, async (req: AuthRequest, res) => {
     try {
       const supplierId = parseInt(req.params.id);
-      
+
       const orders = await db.select()
         .from(purchaseOrders)
         .where(and(
@@ -910,13 +956,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           eq(purchaseOrders.isDeleted, false)
         ))
         .orderBy(desc(purchaseOrders.createdAt));
-        
+
       res.json(orders);
     } catch (error: any) {
       console.error("GET /api/suppliers/:id/history failed:", error);
       res.status(500).json({ error: "Failed to load supplier history" });
     }
   });
+
   // --- CUSTOMERS ---
   app.get("/api/customers", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -955,12 +1002,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load customers" });
     }
   });
+
   app.post("/api/customers", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { name, phone, address, taxId } = req.body;
       if (!name) {
         return res.status(400).json({ error: "Customer name is required" });
       }
+
       const [newCust] = await db.insert(customers)
         .values({
           name: name.trim(),
@@ -969,12 +1018,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           taxId: taxId ? taxId.trim() : null,
         })
         .returning();
+
       res.status(201).json(newCust);
     } catch (error: any) {
       console.error("POST /api/customers failed:", error);
       res.status(500).json({ error: "Failed to create customer" });
     }
   });
+
   app.put("/api/customers/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -982,6 +1033,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       if (!name) {
         return res.status(400).json({ error: "Customer name is required" });
       }
+
       const [updated] = await db.update(customers)
         .set({
           name: name.trim(),
@@ -991,6 +1043,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         })
         .where(eq(customers.id, id))
         .returning();
+
       if (!updated) {
         return res.status(404).json({ error: "Customer not found" });
       }
@@ -1000,6 +1053,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to update customer" });
     }
   });
+
   app.get("/api/customers/:id/history", requireAuth, async (req: AuthRequest, res) => {
     try {
       const customerId = parseInt(req.params.id);
@@ -1013,6 +1067,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load customer order history" });
     }
   });
+
   // Batch Import Customers
   app.post("/api/customers/import", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -1020,33 +1075,40 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       if (!Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: "Invalid items array" });
       }
+
       let importedCount = 0;
       let skippedCount = 0;
+
       for (const item of items) {
         const { name, phone, address, taxId } = item;
         if (!name) {
           skippedCount++;
           continue;
         }
+
         const [existing] = await db.select().from(customers).where(eq(customers.name, String(name).trim()));
         if (existing) {
           skippedCount++;
           continue;
         }
+
         await db.insert(customers).values({
           name: String(name).trim(),
           phone: phone ? String(phone).trim() : null,
           address: address ? String(address).trim() : null,
           taxId: taxId ? String(taxId).trim() : null,
         });
+
         importedCount++;
       }
+
       res.json({ message: "Import completed", importedCount, skippedCount });
     } catch (error: any) {
       console.error("POST /api/customers/import failed:", error);
       res.status(500).json({ error: "Failed to import customers" });
     }
   });
+
   // Batch Import Suppliers
   app.post("/api/suppliers/import", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -1054,34 +1116,43 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       if (!Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: "Invalid items array" });
       }
+
       let importedCount = 0;
       let skippedCount = 0;
+
       for (const item of items) {
         const { name, phone, address, taxId } = item;
         if (!name) {
           skippedCount++;
           continue;
         }
+
         const [existing] = await db.select().from(suppliers).where(eq(suppliers.name, String(name).trim()));
         if (existing) {
           skippedCount++;
           continue;
         }
+
         await db.insert(suppliers).values({
           name: String(name).trim(),
           phone: phone ? String(phone).trim() : null,
           address: address ? String(address).trim() : null,
           taxId: taxId ? String(taxId).trim() : null,
         });
+
         importedCount++;
       }
+
       res.json({ message: "Import completed", importedCount, skippedCount });
     } catch (error: any) {
       console.error("POST /api/suppliers/import failed:", error);
       res.status(500).json({ error: "Failed to import suppliers" });
     }
   });
+
+
   // --- INVOICES & SALES ---
+
   // List posted / statistics invoices (with pagination of 30)
   app.get("/api/invoices", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -1089,15 +1160,19 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       const limit = 10;
       const offset = (page - 1) * limit;
       const { search, status, isRecorded, startDate, endDate, sort, isDeleted } = req.query;
+
       let conditions = [];
+
       if (isDeleted !== undefined) {
         conditions.push(eq(invoices.isDeleted, isDeleted === 'true'));
       } else {
         conditions.push(eq(invoices.isDeleted, false));
       }
+
       if (isRecorded !== undefined) {
         conditions.push(eq(invoices.isRecorded, isRecorded === 'true'));
       }
+
       if (status) {
         if (status === 'CK') {
           conditions.push(
@@ -1110,14 +1185,17 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           conditions.push(eq(invoices.status, status as string));
         }
       }
+
       if (startDate) {
         conditions.push(gte(invoices.createdAt, new Date(startDate as string)));
       }
+
       if (endDate) {
         const end = new Date(endDate as string);
         end.setHours(23, 59, 59, 999);
         conditions.push(lte(invoices.createdAt, end));
       }
+
       if (search) {
         const words = (search as string).split(/\s+/).filter(Boolean);
         if (words.length > 0) {
@@ -1154,7 +1232,9 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           }
         }
       }
+
       const filterClause = conditions.length > 0 ? and(...conditions) : undefined;
+
       // Count total matching invoices
       const [countResult] = await db.select({ 
         count: sql<number>`count(*)::int`,
@@ -1165,6 +1245,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         .where(filterClause);
       const total = countResult ? Number(countResult.count) : 0;
       const totalAmountSum = countResult && countResult.sumAmount ? Number(countResult.sumAmount) : 0;
+
       // Fetch invoice list
       const list = await db.select({
         id: invoices.id,
@@ -1190,6 +1271,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       .orderBy(sort === 'asc' ? asc(invoices.createdAt) : desc(invoices.createdAt))
       .limit(limit)
       .offset(offset);
+
       res.json({
         total,
         page,
@@ -1203,11 +1285,12 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load invoices" });
     }
   });
+
   // Get single invoice with full details (items, deposits, logs)
   app.get("/api/invoices/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       const [invoice] = await db.select({
         id: invoices.id,
         invoiceNumber: invoices.invoiceNumber,
@@ -1231,9 +1314,11 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       .leftJoin(customers, eq(invoices.customerId, customers.id))
       .leftJoin(users, eq(invoices.createdBy, users.id))
       .where(eq(invoices.id, id));
+
       if (!invoice) {
         return res.status(404).json({ error: "Invoice not found" });
       }
+
       // Fetch Items
       const items = await db.select({
         id: invoiceItems.id,
@@ -1252,10 +1337,13 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       .from(invoiceItems)
       .leftJoin(products, eq(invoiceItems.productId, products.id))
       .where(eq(invoiceItems.invoiceId, id));
+
       // Fetch Deposits
       const invoiceDeposits = await db.select().from(deposits).where(eq(deposits.invoiceId, id));
+
       // Fetch Logs
       const logs = await db.select().from(invoiceLogs).where(eq(invoiceLogs.invoiceId, id)).orderBy(desc(invoiceLogs.id));
+
       res.json({
         ...invoice,
         items,
@@ -1267,16 +1355,19 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load invoice details" });
     }
   });
+
   // Create Invoice (Draft - goes directly into "Trang chờ" as isRecorded: false)
   app.post("/api/invoices", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { customerId, status, depositEnabled, items, invoiceNumberCustom, customCustomerName } = req.body;
-      
+
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: "Invoice must have at least one product" });
       }
+
       const activeStatus = status || "CTT"; // default Chưa thanh toán
       const { documentCode, invoiceNumber } = await generateInvoiceCodes(activeStatus);
+
       // Total invoice amount
       let totalAmount = 0;
       const processedItems = items.map((itm: any) => {
@@ -1284,6 +1375,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         const price = Number(itm.price) || 0;
         const totalItem = qty * price;
         totalAmount += totalItem;
+
         return {
           productId: itm.productId ? Number(itm.productId) : null,
           productName: String(itm.productName),
@@ -1297,6 +1389,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           warehouseId: itm.warehouseId ? Number(itm.warehouseId) : null,
         };
       });
+
       // Insert invoice
       const [newInvoice] = await db.insert(invoices)
         .values({
@@ -1311,6 +1404,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           createdBy: req.user?.dbId,
         })
         .returning();
+
       // Insert items
       for (const pItem of processedItems) {
         await db.insert(invoiceItems).values({
@@ -1318,6 +1412,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           ...pItem,
         });
       }
+
       // Log invoice action
       await logInvoiceAction(
         newInvoice.id,
@@ -1325,12 +1420,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         `Đã tạo hóa đơn tạm (Chưa ghi sổ). Mã chứng từ: ${documentCode}, Số hóa đơn: ${newInvoice.invoiceNumber}, Tổng tiền: ${totalAmount.toLocaleString('vi-VN')} VND.`,
         req.user?.email || "system"
       );
+
       res.status(201).json(newInvoice);
     } catch (error: any) {
       console.error("POST /api/invoices failed:", error);
       res.status(500).json({ error: "Failed to create invoice" });
     }
   });
+
   app.post("/api/invoices/create-blank", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { documentCode, invoiceNumber } = await generateInvoiceCodes('CTT');
@@ -1342,7 +1439,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         totalAmount: 0,
         createdBy: req.user?.dbId,
       }).returning();
-      
+
       await logInvoiceAction(newInvoice.id, 'TẠO MỚI', 'Tạo hóa đơn mới (trống)', req.user?.email || 'Unknown');
       res.json(newInvoice);
     } catch (error) {
@@ -1350,6 +1447,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to create blank invoice" });
     }
   });
+
   // Edit / Update Invoice details
   app.put("/api/invoices/:id", requireAuth, async (req: AuthRequest, res) => {
     let retries = 3;
@@ -1357,16 +1455,18 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       try {
         const id = parseInt(req.params.id);
         const { customerId, status, depositEnabled, items, invoiceNumber, documentCode, createdAt, deposits: bodyDeposits, customCustomerName, bankAccountId } = req.body;
+
         const [existing] = await db.select().from(invoices).where(eq(invoices.id, id));
         if (!existing) {
           return res.status(404).json({ error: "Invoice not found" });
         }
+
         // If it is already recorded, check if items were changed. If items changed, block unless unposted
         if (existing.isRecorded && items && Array.isArray(items)) {
           return res.status(400).json({ error: "Hóa đơn đã ghi sổ. Vui lòng BỎ GHI SỔ trước khi chỉnh sửa danh sách sản phẩm." });
         }
 
-             
+
         const oldCreatedAt = existing.createdAt ? new Date(existing.createdAt) : new Date();
         const newCreatedAt = createdAt ? new Date(createdAt) : oldCreatedAt;
 
@@ -1376,11 +1476,13 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             oldCreatedAt.getDate() !== newCreatedAt.getDate()) {
           dateChanged = true;
         }
+
         let docCode = existing.documentCode;
         let updateStatus = existing.status;
         if (status && status !== existing.status) {
           updateStatus = status;
         }
+
         if (dateChanged || status !== existing.status) {
            const codes = await generateInvoiceCodes(updateStatus, newCreatedAt);
            docCode = codes.documentCode;
@@ -1390,7 +1492,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
 
         const originalInvoiceNumber = invoiceNumber !== undefined ? (String(invoiceNumber).trim() || "0") : existing.invoiceNumber;
         const finalInvoiceNumber = dateChanged ? updateCodeWithNewDate(originalInvoiceNumber, newCreatedAt) : originalInvoiceNumber;
-
+        
         // Update basic fields
         await db.update(invoices)
           .set({
@@ -1405,6 +1507,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             updatedAt: new Date(),
           })
           .where(eq(invoices.id, id));
+
         // Update corresponding stock transactions if any exist
         await db.update(stockTransactions)
           .set({
@@ -1412,6 +1515,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             docNumber: docCode
           })
           .where(eq(stockTransactions.docNumber, existing.documentCode));
+
         // If deposits are sent, recreate them
         if (bodyDeposits && Array.isArray(bodyDeposits)) {
           await db.delete(deposits).where(eq(deposits.invoiceId, id));
@@ -1426,12 +1530,11 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           }
         }
         let totalAmount = existing.totalAmount;
-
         // If we are in draft mode and items are sent, recreate them
         if (!existing.isRecorded && items && Array.isArray(items)) {
           // Delete existing items
           await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
-          
+
           // Insert new items & calculate total
           totalAmount = 0;
           for (const itm of items) {
@@ -1439,6 +1542,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             const price = Number(itm.price) || 0;
             const itemTotal = qty * price;
             totalAmount += itemTotal;
+
             await db.insert(invoiceItems).values({
               invoiceId: id,
               productId: itm.productId ? Number(itm.productId) : null,
@@ -1453,17 +1557,20 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
               warehouseId: itm.warehouseId ? Number(itm.warehouseId) : null,
             });
           }
+
           // Update totalAmount
           await db.update(invoices)
             .set({ totalAmount: totalAmount })
             .where(eq(invoices.id, id));
         }
+
         await logInvoiceAction(
           id,
           "CHỈNH SỬA",
           `Đã cập nhật thông tin hóa đơn. Trạng thái mới: ${updateStatus}. Mã chứng từ mới: ${docCode}. Tổng tiền: ${totalAmount.toLocaleString('vi-VN')} VND.`,
           req.user?.email || "system"
         );
+
         res.json({ id, message: "Invoice updated successfully" });
         return;
       } catch (error: any) {
@@ -1475,30 +1582,35 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
            await new Promise(r => setTimeout(r, 1000));
            continue;
         }
-        
+
         console.error("PUT /api/invoices failed:", error);
         res.status(500).json({ error: "Failed to update invoice: " + (error.message || String(error)) });
         return;
       }
     }
   });
+
   // GHI SỔ (Record Bill - subtract from inventory, move from Pending to Statistics)
   app.post("/api/invoices/:id/record", requireAuth, async (req: AuthRequest, res) => {
     let retries = 3;
     while (retries > 0) {
       try {
         const id = parseInt(req.params.id);
+
         const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
         if (!invoice) {
           return res.status(404).json({ error: "Invoice not found" });
         }
+
         if (invoice.isRecorded) {
           return res.status(400).json({ error: "Hóa đơn này đã ghi sổ rồi." });
         }
+
         // Load invoice items
         const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
-        
+
         const invoiceDate = invoice.createdAt ? new Date(invoice.createdAt) : new Date();
+
         // Verification: Ensure enough stock for all items at the time of the invoice
         for (const itm of items) {
           if (itm.productId) {
@@ -1506,7 +1618,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             if (!prod) {
               return res.status(400).json({ error: `Sản phẩm với mã ${itm.productCode} không tồn tại trong kho.` });
             }
-            
+
             // Calculate historical stock up to invoiceDate
             const txList = await db.select()
               .from(stockTransactions)
@@ -1516,12 +1628,13 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
                   lte(stockTransactions.createdAt, invoiceDate)
                 )
               );
-            
+
             let historicalStock = 0;
             for (const tx of txList) {
               if (tx.type === "NHAP" || tx.type === "BO_GHI_SO") historicalStock += tx.quantity;
               else if (tx.type === "XUAT" || tx.type === "GHI_SO") historicalStock -= tx.quantity;
             }
+
             if (historicalStock < itm.quantity) {
               return res.status(400).json({
                 error: `Không đủ tồn kho cho sản phẩm "${itm.productName}" (Mã: ${itm.productCode}) tại thời điểm ${invoiceDate.toLocaleString('vi-VN')}. Tồn kho lúc đó: ${historicalStock}, Cần xuất: ${itm.quantity}.`
@@ -1529,6 +1642,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             }
           }
         }
+
         // Perform transaction reductions and log stock transactions
         for (const itm of items) {
           if (itm.productId) {
@@ -1539,6 +1653,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
                 updatedAt: new Date(),
               })
               .where(eq(products.id, itm.productId));
+
             // Log stock reduction
             let partnerName = null;
             if (invoice.customerId) {
@@ -1559,6 +1674,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             });
           }
         }
+
         // Set as recorded
         await db.update(invoices)
           .set({
@@ -1566,12 +1682,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             updatedAt: new Date(),
           })
           .where(eq(invoices.id, id));
+
         await logInvoiceAction(
           id,
           "GHI SỔ",
           `Xác nhận ghi sổ hóa đơn. Đã trừ kho tương ứng các sản phẩm. Trạng thái: ${invoice.status}, Mã chứng từ: ${invoice.documentCode}.`,
           req.user?.email || "system"
         );
+
         res.json({ success: true, message: "Ghi sổ thành công. Đã cập nhật tồn kho vật tư." });
         return; // Success, exit retry loop
       } catch (error: any) {
@@ -1583,27 +1701,33 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
            await new Promise(r => setTimeout(r, 1000));
            continue;
         }
+
         console.error("POST record invoice failed:", error);
         res.status(500).json({ error: "Failed to record invoice: " + (error.message || String(error)) });
         return;
       }
     }
   });
+
   // BỎ GHI SỔ (Unrecord Bill - add back to inventory, move from Statistics to Pending)
   app.post("/api/invoices/:id/unrecord", requireAuth, async (req: AuthRequest, res) => {
     let retries = 3;
     while (retries > 0) {
       try {
         const id = parseInt(req.params.id);
+
         const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
         if (!invoice) {
           return res.status(404).json({ error: "Invoice not found" });
         }
+
         if (!invoice.isRecorded) {
           return res.status(400).json({ error: "Hóa đơn này chưa được ghi sổ." });
         }
+
         // Load invoice items
         const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+
         // Add back to stock and log stock transactions
         for (const itm of items) {
           if (itm.productId) {
@@ -1614,6 +1738,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
                 updatedAt: new Date(),
               })
               .where(eq(products.id, itm.productId));
+
             // Log stock increment => INSTEAD, Delete the record
             await db.delete(stockTransactions)
               .where(
@@ -1625,6 +1750,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
               );
           }
         }
+
         // Set as unrecorded
         await db.update(invoices)
           .set({
@@ -1632,12 +1758,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             updatedAt: new Date(),
           })
           .where(eq(invoices.id, id));
+
         await logInvoiceAction(
           id,
           "BỎ GHI SỔ",
           `Bỏ ghi sổ hóa đơn. Đã hoàn trả hàng hóa lại vào kho. Hóa đơn quay trở về trạng thái Chờ xác nhận.`,
           req.user?.email || "system"
         );
+
         res.json({ success: true, message: "Bỏ ghi sổ thành công. Đã hoàn kho các sản phẩm." });
         return; // Success, exit retry loop
       } catch (error: any) {
@@ -1649,27 +1777,29 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
            await new Promise(r => setTimeout(r, 1000));
            continue;
         }
-        
+
         console.error("POST unrecord invoice failed:", error);
         res.status(500).json({ error: "Failed to unrecord invoice: " + (error.message || String(error)) });
         return;
       }
     }
   });
+
   // DUPLICATE INVOICE (Nhân bản hóa đơn)
   app.post("/api/invoices/:id/duplicate", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
+
       const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
       if (!invoice) {
         return res.status(404).json({ error: "Invoice not found" });
       }
+
       // Load items
       const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
 
       // Generate new code & number for the clone
       const { documentCode, invoiceNumber } = await generateInvoiceCodes(invoice.status);
-
       // Create new draft invoice
       const [newInvoice] = await db.insert(invoices)
         .values({
@@ -1683,6 +1813,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           createdBy: req.user?.dbId,
         })
         .returning();
+
       // Insert cloned items
       for (const itm of items) {
         await db.insert(invoiceItems).values({
@@ -1698,26 +1829,31 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           vatRate: itm.vatRate ? Number(itm.vatRate) : 0,
         });
       }
+
       await logInvoiceAction(
         newInvoice.id,
         "NHÂN BẢN",
         `Nhân bản từ hóa đơn cũ #${invoice.invoiceNumber} (${invoice.documentCode})`,
         req.user?.email || "system"
       );
+
       res.status(201).json(newInvoice);
     } catch (error: any) {
       console.error("POST duplicate invoice failed:", error);
       res.status(500).json({ error: "Failed to duplicate invoice" });
     }
   });
+
   // SOFT DELETE INVOICE (Move to Trash)
   app.delete("/api/invoices/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
+
       const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
       if (!invoice) {
         return res.status(404).json({ error: "Invoice not found" });
       }
+
       // Automatically unrecord if it is recorded
       if (invoice.isRecorded) {
         const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
@@ -1729,7 +1865,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
                 updatedAt: new Date(),
               })
               .where(eq(products.id, itm.productId));
-              
+
             await db.delete(stockTransactions)
               .where(
                 and(
@@ -1741,18 +1877,20 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           }
         }
       }
+
       await db.update(invoices).set({ 
         isDeleted: true, 
         deletedAt: new Date(),
         isRecorded: false // Force to false since it's now in trash
       }).where(eq(invoices.id, id));
-      
+
       res.json({ message: "Invoice moved to trash" });
     } catch (error: any) {
       console.error("DELETE invoice failed:", error);
       res.status(500).json({ error: "Failed to move invoice to trash" });
     }
   });
+
   // RESTORE INVOICE
   app.post("/api/invoices/:id/restore", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -1764,14 +1902,17 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to restore invoice" });
     }
   });
+
   // PERMANENT DELETE INVOICE
   app.delete("/api/invoices/:id/permanent", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
+
       const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
       if (!invoice) {
         return res.status(404).json({ error: "Invoice not found" });
       }
+
       // Delete cascade is supported by foreign key setup in schema, but we double-verify
       await db.delete(invoices).where(eq(invoices.id, id));
       res.json({ message: "Invoice deleted permanently" });
@@ -1780,18 +1921,22 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to permanently delete invoice" });
     }
   });
+
   // ADD DEPOSIT (Cọc nhiều lần)
   app.post("/api/invoices/:id/deposits", requireAuth, async (req: AuthRequest, res) => {
     try {
       const invoiceId = parseInt(req.params.id);
       const { amount, paymentMethod, note } = req.body;
+
       if (!amount || Number(amount) <= 0 || !paymentMethod) {
         return res.status(400).json({ error: "Vui lòng nhập đầy đủ số tiền cọc hợp lệ và phương thức." });
       }
+
       const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
       if (!invoice) {
         return res.status(404).json({ error: "Invoice not found" });
       }
+
       const [newDep] = await db.insert(deposits)
         .values({
           invoiceId,
@@ -1800,18 +1945,21 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           note: note || "Khách hàng đặt cọc",
         })
         .returning();
+
       await logInvoiceAction(
         invoiceId,
         "ĐẶT CỌC",
         `Đã nhận tiền đặt cọc: ${Number(amount).toLocaleString('vi-VN')} VND qua ${paymentMethod === 'TM' ? 'Tiền mặt' : 'Chuyển khoản'}. Ghi chú: ${note || 'không có'}.`,
         req.user?.email || "system"
       );
+
       res.status(201).json(newDep);
     } catch (error: any) {
       console.error("POST invoice deposit failed:", error);
       res.status(500).json({ error: "Failed to add deposit" });
     }
   });
+
   // --- REPORT EXCEL EXPORT ---
   app.get("/api/reports/excel", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -1826,6 +1974,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         "Ngưỡng tồn thấp": p.minStock,
         "Trạng thái": p.quantity <= p.minStock ? "Cảnh báo: Tồn kho thấp" : "Bình thường"
       }));
+
       // 2. Fetch Invoices Data
       const dbInvoices = await db.select({
         id: invoices.id,
@@ -1842,10 +1991,12 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       .leftJoin(customers, eq(invoices.customerId, customers.id))
       .where(eq(invoices.isDeleted, false))
       .orderBy(desc(invoices.createdAt));
+
       const invoicesSheetData = dbInvoices.map(inv => {
         let txtStatus = "Chưa thanh toán";
         if (inv.status === "TM") txtStatus = "Thanh toán tiền mặt";
         else if (inv.status === "CK") txtStatus = "Chuyển khoản";
+
         return {
           "Số hóa đơn": inv.invoiceNumber,
           "Mã chứng từ": inv.documentCode,
@@ -1857,14 +2008,19 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           "Ngày tạo": inv.createdAt ? new Date(inv.createdAt).toLocaleString('vi-VN') : ""
         };
       });
+
       // Create Workbook
       const wb = xlsx.utils.book_new();
+
       const wsProducts = xlsx.utils.json_to_sheet(productsSheetData);
       const wsInvoices = xlsx.utils.json_to_sheet(invoicesSheetData);
+
       xlsx.utils.book_append_sheet(wb, wsProducts, "Danh sách vật tư");
       xlsx.utils.book_append_sheet(wb, wsInvoices, "Danh sách hóa đơn");
+
       // Write binary buffer
       const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+
       res.setHeader('Content-Disposition', 'attachment; filename=Bao_cao_Duc_Vinh_Solar.xlsx');
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.send(buffer);
@@ -1873,6 +2029,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to generate report" });
     }
   });
+
   // --- BANK ACCOUNTS ---
   app.get("/api/bank-accounts", requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -1883,12 +2040,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to load bank accounts" });
     }
   });
+
   app.post("/api/bank-accounts", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { accountNumber, bankName, accountName, branch } = req.body;
       if (!accountNumber || !bankName || !accountName) {
         return res.status(400).json({ error: "Account Number, Bank Name, and Account Name are required" });
       }
+
       const [newAccount] = await db.insert(bankAccounts)
         .values({
           accountNumber: String(accountNumber).trim(),
@@ -1897,12 +2056,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           branch: branch ? String(branch).trim() : null,
         })
         .returning();
+
       res.status(201).json(newAccount);
     } catch (error: any) {
       console.error("POST /api/bank-accounts failed:", error);
       res.status(500).json({ error: "Failed to create bank account" });
     }
   });
+
   app.put("/api/bank-accounts/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1910,6 +2071,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       if (!accountNumber || !bankName || !accountName) {
         return res.status(400).json({ error: "Account Number, Bank Name, and Account Name are required" });
       }
+
       const [updated] = await db.update(bankAccounts)
         .set({
           accountNumber: String(accountNumber).trim(),
@@ -1919,15 +2081,18 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         })
         .where(eq(bankAccounts.id, id))
         .returning();
+
       if (!updated) {
         return res.status(404).json({ error: "Bank account not found" });
       }
+
       res.json(updated);
     } catch (error: any) {
       console.error("PUT /api/bank-accounts failed:", error);
       res.status(500).json({ error: "Failed to update bank account" });
     }
   });
+
   app.delete("/api/bank-accounts/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1938,6 +2103,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(500).json({ error: "Failed to delete bank account" });
     }
   });
+
   // Serve static assets / Vite middleware
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -1952,8 +2118,10 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
+
 startServer();
