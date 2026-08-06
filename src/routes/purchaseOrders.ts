@@ -19,17 +19,6 @@ export const purchaseOrdersRouter = Router();
 function updateCodeWithNewDate(code: string | null | undefined, newDate: Date): string {
   if (!code) return "";
   const parts = code.split('-');
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -24,7 +22,6 @@ function updateCodeWithNewDate(code: string | null | undefined, newDate: Date):
-  
   const yyyy = newDate.getFullYear();
   const mm = String(newDate.getMonth() + 1).padStart(2, '0');
   const dd = String(newDate.getDate()).padStart(2, '0');
@@ -39,17 +28,6 @@ function updateCodeWithNewDate(code: string | null | undefined, newDate: Date): 
   if (parts.length === 3) {
     const prefix = parts[0];
     if (prefix === 'TM' || prefix === 'CK') {
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -42,7 +39,6 @@ function updateCodeWithNewDate(code: string | null | undefined, newDate: Date):
-  
       parts[1] = yymmdd;
     } else {
       parts[1] = yyyymmdd;
@@ -68,23 +46,6 @@ function updateCodeWithNewDate(code: string | null | undefined, newDate: Date): 
 async function generatePOCodes(status: string, targetDate: Date = new Date()) {
   const now = targetDate;
   const yyyy = now.getFullYear();
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -106,7 +102,6 @@ async function generatePOCodes(status: string, targetDate: Date = new Date()) {
-  
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
   
@@ -142,30 +103,13 @@ async function generatePOCodes(status: string, targetDate: Date = new Date()) {
       }
       attempt++;
   }
-
+  
   return { documentCode, poNumber };
 }
 
 async function getRegeneratedPODocumentCode(poId: number, newStatus: string) {
   const [po] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, poId));
   if (!po) throw new Error("PO not found");
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -136,7 +131,6 @@ async function getRegeneratedPODocumentCode(poId: number, newStatus: string) {
-  
   
   const date = po.createdAt ? new Date(po.createdAt) : new Date();
   const yyyy = date.getFullYear();
@@ -196,17 +140,6 @@ async function getRegeneratedPODocumentCode(poId: number, newStatus: string) {
 async function logPOAction(poId: number, action: string, details: string, email: string) {
   try {
     await db.insert(purchaseOrderLogs).values({
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -149,26 +143,21 @@ async function logPOAction(poId: number, action: string, details: string, email:
-  
       poId,
       action,
       details,
@@ -239,17 +172,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
     if (status) {
       if (status === 'CK') {
         conditions.push(
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -181,17 +170,14 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
-  
           or(
             eq(purchaseOrders.status, 'CK'),
             like(purchaseOrders.status, 'CK - %')
@@ -273,23 +195,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
     if (search) {
       const words = (search as string).split(/\s+/).filter(Boolean);
       if (words.length > 0) {
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -228,9 +214,7 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
-  
         if (getIsUnaccentSupported()) {
           const wordConditions = words.map(word => {
             const pattern = `%${word}%`;
@@ -304,7 +209,7 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
           });
           conditions.push(and(...wordConditions));
         } else {
-          const VI_ACCENTS = 'áàảãạâấầẩẫậăắằẳẵặđéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵÁÀẢÃẠÂẤẦẨẪẬĂẮẰẲẴẶĐÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴ';
+          const VI_ACCENTS = 'Ã¡Ã áº£Ã£áº¡Ã¢áº¥áº§áº©áº«áº­Äƒáº¯áº±áº³áºµáº·Ä‘Ã©Ã¨áº»áº½áº¹Ãªáº¿á»á»ƒá»…á»‡Ã­Ã¬á»‰Ä©á»‹Ã³Ã²á»Ãµá»Ã´á»‘á»“á»•á»—á»™Æ¡á»›á»á»Ÿá»¡á»£ÃºÃ¹á»§Å©á»¥Æ°á»©á»«á»­á»¯á»±Ã½á»³á»·á»¹á»µÃÃ€áº¢Ãƒáº Ã‚áº¤áº¦áº¨áºªáº¬Ä‚áº®áº°áº²áº´áº¶ÄÃ‰Ãˆáººáº¼áº¸ÃŠáº¾á»€á»‚á»„á»†ÃÃŒá»ˆÄ¨á»ŠÃ“Ã’á»ŽÃ•á»ŒÃ”á»á»’á»”á»–á»˜Æ á»šá»œá»žá» á»¢ÃšÃ™á»¦Å¨á»¤Æ¯á»¨á»ªá»¬á»®á»°Ãá»²á»¶á»¸á»´';
           const VI_NON_ACCENTS = 'aaaaaaaaaaaaaaaaadeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyAAAAAAAAAAAAAAAAADEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYY';
           const wordConditions = words.map(word => {
             const pattern = `%${word}%`;
@@ -329,17 +234,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
     const [countResult] = await db.select({ 
       count: sql<number>`count(*)::int`,
       sumAmount: sql<any>`sum(${purchaseOrders.totalAmount} - CASE WHEN ${purchaseOrders.depositEnabled} = TRUE THEN COALESCE((SELECT sum(amount) FROM purchase_order_deposits WHERE po_id = ${purchaseOrders.id}), 0) ELSE 0 END)::numeric`
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -240,7 +224,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
-  
     })
       .from(purchaseOrders)
       .leftJoin(suppliers, eq(purchaseOrders.supplierId, suppliers.id))
@@ -350,17 +244,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
     const list = await db.select({
       id: purchaseOrders.id,
       poNumber: purchaseOrders.poNumber,
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -266,7 +249,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
-  
       documentCode: purchaseOrders.documentCode,
       status: purchaseOrders.status,
       isRecorded: purchaseOrders.isRecorded,
@@ -387,17 +270,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
     res.json({
       total,
       page,
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -280,7 +262,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
-  
       limit,
       totalPages: Math.ceil(total / limit),
       totalAmountSum,
@@ -412,23 +284,6 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
 purchaseOrdersRouter.get("/purchase-orders/:id", requireAuth as any, async (req: any, res: any) => {
   try {
     const id = parseInt(req.params.id);
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -308,9 +289,7 @@ purchaseOrdersRouter.get("/purchase-orders/:id", requireAuth as any, async (req:
-  
     
     const [po] = await db.select({
       id: purchaseOrders.id,
@@ -459,17 +314,6 @@ purchaseOrdersRouter.get("/purchase-orders/:id", requireAuth as any, async (req:
     const items = await db.select({
         id: purchaseOrderItems.id,
         poId: purchaseOrderItems.poId,
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -330,34 +309,28 @@ purchaseOrdersRouter.get("/purchase-orders/:id", requireAuth as any, async (req:
-  
         productId: purchaseOrderItems.productId,
         productName: purchaseOrderItems.productName,
         productCode: purchaseOrderItems.productCode,
@@ -505,7 +349,7 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
     }
 
     let { documentCode, poNumber } = await generatePOCodes(status);
-
+    
     if (purchaseOrderNumberCustom && purchaseOrderNumberCustom.trim() !== '') {
       poNumber = purchaseOrderNumberCustom.trim();
     } else {
@@ -517,17 +361,6 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
     const [newPO] = await db.insert(purchaseOrders).values({
       poNumber,
       documentCode,
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -370,7 +343,6 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
-  
       supplierId: supplierId ? Number(supplierId) : null,
       customSupplierName: customSupplierName || null,
       status,
@@ -541,17 +374,6 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
     for (const item of items) {
       const itemTotal = item.quantity * item.price;
       await db.insert(purchaseOrderItems).values({
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -386,7 +358,6 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
-  
         poId: newPO.id,
         productId: item.productId,
         productName: item.productName,
@@ -568,25 +390,8 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
       if (newPO.isRecorded) {
         if (item.productId) {
           const [product] = await db.select().from(products).where(eq(products.id, item.productId));
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -415,19 +386,16 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
-  
           if (product) {
-            const newQty = product.quantity + item.quantity; // Nhập kho -> Tăng số lượng
+            const newQty = product.quantity + item.quantity; // Nháº­p kho -> TÄƒng sá»‘ lÆ°á»£ng
             await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
             
             let partnerName = null;
@@ -598,7 +403,7 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
               productId: item.productId,
               type: 'NHAP', // Changed to NHAP
               quantity: item.quantity,
-              note: `Ghi sổ phiếu nhập hàng ${newPO.poNumber} (${newPO.documentCode})`,
+              note: `Ghi sá»• phiáº¿u nháº­p hÃ ng ${newPO.poNumber} (${newPO.documentCode})`,
               userEmail,
               docNumber: newPO.documentCode,
               partnerName: partnerName,
@@ -611,9 +416,9 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
       }
     }
 
-    await logPOAction(newPO.id, 'TẠO MỚI', `Tạo phiếu nhập mới ${newPO.poNumber}`, userEmail);
+    await logPOAction(newPO.id, 'Táº O Má»šI', `Táº¡o phiáº¿u nháº­p má»›i ${newPO.poNumber}`, userEmail);
     if (newPO.isRecorded) {
-      await logPOAction(newPO.id, 'GHI SỔ', `Ghi sổ phiếu nhập hàng, cộng số lượng kho`, userEmail);
+      await logPOAction(newPO.id, 'GHI Sá»”', `Ghi sá»• phiáº¿u nháº­p hÃ ng, cá»™ng sá»‘ lÆ°á»£ng kho`, userEmail);
     }
 
     res.status(201).json(newPO);
@@ -626,17 +431,6 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
 purchaseOrdersRouter.post("/purchase-orders/create-blank", requireAuth as any, async (req: any, res: any) => {
   try {
     const codes = await generatePOCodes('CTT');
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -446,32 +414,26 @@ purchaseOrdersRouter.post("/purchase-orders/create-blank", requireAuth as any, a
-  
     const [newPO] = await db.insert(purchaseOrders).values({
       poNumber: "0",
       documentCode: codes.documentCode,
@@ -645,7 +439,7 @@ purchaseOrdersRouter.post("/purchase-orders/create-blank", requireAuth as any, a
       totalAmount: 0
     }).returning();
     
-    await logPOAction(newPO.id, 'TẠO MỚI', 'Tạo phiếu nhập mới (trống)', req.user?.email || 'Unknown');
+    await logPOAction(newPO.id, 'Táº O Má»šI', 'Táº¡o phiáº¿u nháº­p má»›i (trá»‘ng)', req.user?.email || 'Unknown');
     res.json(newPO);
   } catch (error) {
     console.error("POST /api/purchase-orders/create-blank failed:", error);
@@ -667,7 +461,7 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
       }
 
       if (existing.isRecorded && items && Array.isArray(items)) {
-        return res.status(400).json({ error: "Phiếu nhập đã ghi sổ. Vui lòng BỎ GHI SỔ trước khi chỉnh sửa danh sách sản phẩm." });
+        return res.status(400).json({ error: "Phiáº¿u nháº­p Ä‘Ã£ ghi sá»•. Vui lÃ²ng Bá»Ž GHI Sá»” trÆ°á»›c khi chá»‰nh sá»­a danh sÃ¡ch sáº£n pháº©m." });
       }
 
       let totalAmount = existing.totalAmount;
@@ -681,17 +475,6 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
       let dateChanged = false;
       if (oldCreatedAt.getFullYear() !== newCreatedAt.getFullYear() || 
           oldCreatedAt.getMonth() !== newCreatedAt.getMonth() || 
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -483,7 +445,6 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
-  
           oldCreatedAt.getDate() !== newCreatedAt.getDate()) {
         dateChanged = true;
       }
@@ -704,19 +487,9 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
       let newDocumentCode = existing.documentCode;
       if (dateChanged || status !== existing.status) {
          const codes = await generatePOCodes(updateStatus, newCreatedAt);
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -496,345 +457,10 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
-  
          newDocumentCode = codes.documentCode;
       }
+
       const originalPoNumber = poNumber !== undefined ? (String(poNumber).trim() || "0") : existing.poNumber;
       const finalPoNumber = dateChanged ? updateCodeWithNewDate(originalPoNumber, newCreatedAt) : originalPoNumber;
       
@@ -778,7 +551,7 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
         }
       }
 
-      await logPOAction(id, 'CHỈNH SỬA', `Chỉnh sửa thông tin phiếu nhập hàng`, userEmail);
+      await logPOAction(id, 'CHá»ˆNH Sá»¬A', `Chá»‰nh sá»­a thÃ´ng tin phiáº¿u nháº­p hÃ ng`, userEmail);
 
       return res.json({ message: "Purchase order updated successfully" });
     } catch (error: any) {
@@ -798,24 +571,24 @@ purchaseOrdersRouter.delete("/purchase-orders/:id", requireAuth as any, async (r
   try {
     const id = parseInt(req.params.id);
     const [existing] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, id));
-
+    
     if (!existing) {
       return res.status(404).json({ error: "Purchase order not found" });
     }
 
     if (existing.isRecorded) {
       const items = await db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.poId, id));
-
+      
       // Verification: Ensure enough stock exists BEFORE subtracting
       for (const item of items) {
         if (item.productId) {
           const [product] = await db.select().from(products).where(eq(products.id, item.productId));
           if (!product) {
-            return res.status(400).json({ error: `Sản phẩm với mã ${item.productCode} không tồn tại trong kho.` });
+            return res.status(400).json({ error: `Sáº£n pháº©m vá»›i mÃ£ ${item.productCode} khÃ´ng tá»“n táº¡i trong kho.` });
           }
           if (product.quantity < item.quantity) {
             return res.status(400).json({
-              error: `Không thể xóa (bỏ ghi sổ). Sản phẩm "${item.productName}" (Mã: ${item.productCode}) hiện chỉ còn tồn kho thực tế: ${product.quantity}, không đủ để hoàn trả (cần giảm ${item.quantity}). Vui lòng kiểm tra lại.`
+              error: `KhÃ´ng thá»ƒ xÃ³a (bá» ghi sá»•). Sáº£n pháº©m "${item.productName}" (MÃ£: ${item.productCode}) hiá»‡n chá»‰ cÃ²n tá»“n kho thá»±c táº¿: ${product.quantity}, khÃ´ng Ä‘á»§ Ä‘á»ƒ hoÃ n tráº£ (cáº§n giáº£m ${item.quantity}). Vui lÃ²ng kiá»ƒm tra láº¡i.`
             });
           }
         }
@@ -827,7 +600,7 @@ purchaseOrdersRouter.delete("/purchase-orders/:id", requireAuth as any, async (r
           if (product) {
             const newQty = product.quantity - item.quantity;
             await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
-
+            
             await db.delete(stockTransactions)
               .where(
                 and(
@@ -846,7 +619,7 @@ purchaseOrdersRouter.delete("/purchase-orders/:id", requireAuth as any, async (r
       deletedAt: new Date(),
       isRecorded: false 
     }).where(eq(purchaseOrders.id, id));
-
+    
     res.json({ message: "Purchase order moved to trash" });
   } catch (error: any) {
     console.error("DELETE /api/purchase-orders/:id failed:", error);
@@ -869,7 +642,7 @@ purchaseOrdersRouter.delete("/purchase-orders/:id/permanent", requireAuth as any
   try {
     const id = parseInt(req.params.id);
     const [existing] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, id));
-
+    
     if (!existing) {
       return res.status(404).json({ error: "Purchase order not found" });
     }
@@ -915,15 +688,15 @@ purchaseOrdersRouter.post("/purchase-orders/:id/record", requireAuth as any, asy
     .from(purchaseOrderItems)
     .leftJoin(products, eq(purchaseOrderItems.productId, products.id))
     .where(eq(purchaseOrderItems.poId, id));
-
-
+    
+    
     for (const item of items) {
       if (item.productId) {
         const [product] = await db.select().from(products).where(eq(products.id, item.productId));
         if (product) {
-          const newQty = product.quantity + item.quantity; // Nhập hàng -> cộng vào kho tổng
+          const newQty = product.quantity + item.quantity; // Nháº­p hÃ ng -> cá»™ng vÃ o kho tá»•ng
           await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
-
+          
           let partnerName = null;
           if (existing.supplierId) {
             const [supp] = await db.select().from(suppliers).where(eq(suppliers.id, existing.supplierId));
@@ -933,7 +706,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/record", requireAuth as any, asy
             productId: item.productId,
             type: 'NHAP',
             quantity: item.quantity,
-            note: `Ghi sổ phiếu nhập hàng ${existing.poNumber} (${existing.documentCode})`,
+            note: `Ghi sá»• phiáº¿u nháº­p hÃ ng ${existing.poNumber} (${existing.documentCode})`,
             userEmail,
             warehouseId: item.warehouseId || null,
             docNumber: existing.documentCode,
@@ -947,7 +720,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/record", requireAuth as any, asy
       }
     }
 
-    await logPOAction(id, 'GHI SỔ', `Ghi sổ phiếu nhập hàng, cộng số lượng kho`, userEmail);
+    await logPOAction(id, 'GHI Sá»”', `Ghi sá»• phiáº¿u nháº­p hÃ ng, cá»™ng sá»‘ lÆ°á»£ng kho`, userEmail);
 
     res.json({ message: "Purchase order recorded successfully" });
   } catch (error: any) {
@@ -993,25 +766,25 @@ purchaseOrdersRouter.post("/purchase-orders/:id/unrecord", requireAuth as any, a
       if (item.productId) {
         const [product] = await db.select().from(products).where(eq(products.id, item.productId));
         if (!product) {
-          return res.status(400).json({ error: `Sản phẩm với mã ${item.productCode} không tồn tại trong kho.` });
+          return res.status(400).json({ error: `Sáº£n pháº©m vá»›i mÃ£ ${item.productCode} khÃ´ng tá»“n táº¡i trong kho.` });
         }
         if (product.quantity < item.quantity) {
           return res.status(400).json({
-            error: `Không thể bỏ ghi sổ. Sản phẩm "${item.productName}" (Mã: ${item.productCode}) hiện chỉ còn tồn kho thực tế: ${product.quantity}, không đủ để hoàn trả (cần giảm ${item.quantity}). Vui lòng kiểm tra lại.`
+            error: `KhÃ´ng thá»ƒ bá» ghi sá»•. Sáº£n pháº©m "${item.productName}" (MÃ£: ${item.productCode}) hiá»‡n chá»‰ cÃ²n tá»“n kho thá»±c táº¿: ${product.quantity}, khÃ´ng Ä‘á»§ Ä‘á»ƒ hoÃ n tráº£ (cáº§n giáº£m ${item.quantity}). Vui lÃ²ng kiá»ƒm tra láº¡i.`
           });
         }
       }
     }
 
     await db.update(purchaseOrders).set({ isRecorded: false }).where(eq(purchaseOrders.id, id));
-
+    
     for (const item of items) {
       if (item.productId) {
         const [product] = await db.select().from(products).where(eq(products.id, item.productId));
         if (product) {
-          const newQty = product.quantity - item.quantity; // Bỏ ghi sổ nhập hàng -> trừ khỏi kho tổng
+          const newQty = product.quantity - item.quantity; // Bá» ghi sá»• nháº­p hÃ ng -> trá»« khá»i kho tá»•ng
           await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
-
+          
           await db.delete(stockTransactions)
             .where(
               and(
@@ -1024,7 +797,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/unrecord", requireAuth as any, a
       }
     }
 
-    await logPOAction(id, 'BỎ GHI SỔ', `Bỏ ghi sổ phiếu nhập hàng, hoàn lại số lượng kho`, userEmail);
+    await logPOAction(id, 'Bá»Ž GHI Sá»”', `Bá» ghi sá»• phiáº¿u nháº­p hÃ ng, hoÃ n láº¡i sá»‘ lÆ°á»£ng kho`, userEmail);
 
     res.json({ message: "Purchase order unrecorded successfully" });
   } catch (error: any) {
@@ -1061,21 +834,10 @@ purchaseOrdersRouter.post("/purchase-orders/:id/duplicate", requireAuth as any, 
     .from(purchaseOrderItems)
     .leftJoin(products, eq(purchaseOrderItems.productId, products.id))
     .where(eq(purchaseOrderItems.poId, id));
-
+    
     let { documentCode, poNumber } = await generatePOCodes(existing.status);
     poNumber = "0";
 
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -848,7 +474,6 @@ purchaseOrdersRouter.post("/purchase-orders/:id/duplicate", requireAuth as any,
-  
     const [newPO] = await db.insert(purchaseOrders).values({
       poNumber,
       documentCode,
@@ -1090,17 +852,6 @@ purchaseOrdersRouter.post("/purchase-orders/:id/duplicate", requireAuth as any, 
     for (const item of items) {
       await db.insert(purchaseOrderItems).values({
         poId: newPO.id,
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -863,71 +488,57 @@ purchaseOrdersRouter.post("/purchase-orders/:id/duplicate", requireAuth as any,
-  
         productId: item.productId,
         productName: item.productName,
         productCode: item.productCode,
@@ -1113,7 +864,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/duplicate", requireAuth as any, 
       });
     }
 
-    await logPOAction(newPO.id, 'NHÂN BẢN', `Nhân bản từ phiếu nhập hàng #${existing.poNumber}`, userEmail);
+    await logPOAction(newPO.id, 'NHÃ‚N Báº¢N', `NhÃ¢n báº£n tá»« phiáº¿u nháº­p hÃ ng #${existing.poNumber}`, userEmail);
 
     res.json(newPO);
   } catch (error: any) {
@@ -1144,7 +895,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/deposit", requireAuth as any, as
       note,
     });
 
-    await logPOAction(id, 'THANH TOÁN', `Đã thanh toán: ${Number(amount).toLocaleString()}đ qua ${paymentMethod}. Ghi chú: ${note || 'không có'}.`, userEmail);
+    await logPOAction(id, 'THANH TOÃN', `ÄÃ£ thanh toÃ¡n: ${Number(amount).toLocaleString()}Ä‘ qua ${paymentMethod}. Ghi chÃº: ${note || 'khÃ´ng cÃ³'}.`, userEmail);
 
     res.json({ message: "Deposit added successfully" });
   } catch (error: any) {
@@ -1175,21 +926,11 @@ purchaseOrdersRouter.post("/purchase-orders/:id/deposits", requireAuth as any, a
       note,
     });
 
-    await logPOAction(id, 'THANH TOÁN', `Đã thanh toán: ${Number(amount).toLocaleString()}đ qua ${paymentMethod}. Ghi chú: ${note || 'không có'}.`, userEmail);
+    await logPOAction(id, 'THANH TOÃN', `ÄÃ£ thanh toÃ¡n: ${Number(amount).toLocaleString()}Ä‘ qua ${paymentMethod}. Ghi chÃº: ${note || 'khÃ´ng cÃ³'}.`, userEmail);
 
     res.json({ message: "Deposit added successfully" });
   } catch (error: any) {
     console.error("POST /api/purchase-orders/:id/deposits failed:", error);
-
-    
-          
-            
-    
-
-          
-          Expand Down
-    
-    
-  
     res.status(500).json({ error: "Failed to add deposit" });
   }
+});
