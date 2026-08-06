@@ -1,4 +1,3 @@
-import "dotenv/config";
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -29,7 +28,7 @@ import * as xlsx from "xlsx";
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+  const PORT = process.env.PORT || 3000;
 
   // Ensure unaccent extension is created in the database
   try {
@@ -93,8 +92,8 @@ async function startServer() {
   }
   
   // Generate code and number for a new invoice
-async function generateInvoiceCodes(status: string, targetDate: Date = new Date()) {
-    const now = typeof targetDate !== "undefined" ? targetDate : new Date();
+  async function generateInvoiceCodes(status: string) {
+    const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
@@ -103,9 +102,9 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
     
     // Daily sequence based on invoices created today
-    const startOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
+    const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
+    const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
     const todayInvoices = await db.select({ documentCode: invoices.documentCode })
@@ -220,8 +219,8 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
   }
 
   // Generate code and number for a new Purchase Order
-  async function generatePOCodes(status: string, targetDate: Date = new Date()) {
-    const now = typeof targetDate !== "undefined" ? targetDate : new Date();
+  async function generatePOCodes(status: string) {
+    const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
@@ -230,9 +229,9 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
     
     // Daily sequence based on POs created today
-    const startOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
+    const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = typeof targetDate !== "undefined" ? new Date(targetDate) : new Date();
+    const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
     const todayPOs = await db.select({ documentCode: purchaseOrders.documentCode })
@@ -360,7 +359,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     try {
       const { password } = req.body;
       if (password !== "atuan0987231270") {
-        return res.status(403).json({ error: "Máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c" });
+        return res.status(403).json({ error: "Mật khẩu không chính xác" });
       }
 
       
@@ -385,10 +384,10 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         await tx.delete(warehouses);
       });
 
-      res.json({ success: true, message: "ÄÃ£ xÃ³a sáº¡ch toÃ n bá»™ dá»¯ liá»‡u há»‡ thá»‘ng thÃ nh cÃ´ng!" });
+      res.json({ success: true, message: "Đã xóa sạch toàn bộ dữ liệu hệ thống thành công!" });
     } catch (error: any) {
       console.error("Wipe all data failed:", error);
-      res.status(500).json({ error: "KhÃ´ng thá»ƒ xÃ³a dá»¯ liá»‡u há»‡ thá»‘ng" });
+      res.status(500).json({ error: "Không thể xóa dữ liệu hệ thống" });
     }
   });
 
@@ -423,7 +422,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     try {
       const { password, data } = req.body;
       if (password !== "atuan0987231270") {
-        return res.status(403).json({ error: "Máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c" });
+        return res.status(403).json({ error: "Mật khẩu không chính xác" });
       }
       
       // Convert date strings to Date objects
@@ -499,7 +498,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         await tx.execute(sql`SELECT setval('stock_transactions_id_seq', COALESCE((SELECT MAX(id)+1 FROM stock_transactions), 1), false)`);
       });
       
-      res.json({ success: true, message: "Nháº­p dá»¯ liá»‡u thÃ nh cÃ´ng" });
+      res.json({ success: true, message: "Nhập dữ liệu thành công" });
     } catch (err: any) {
       console.error("Database import failed:", err);
       res.status(500).json({ error: "Failed to import data: " + err.message });
@@ -524,7 +523,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.status(201).json(newWarehouse);
     } catch (error: any) {
       if (error.code === '23505') {
-        return res.status(400).json({ error: "MÃ£ kho Ä‘Ã£ tá»“n táº¡i" });
+        return res.status(400).json({ error: "Mã kho đã tồn tại" });
       }
       res.status(500).json({ error: "Failed to create warehouse" });
     }
@@ -538,7 +537,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       res.json(updated);
     } catch (error: any) {
        if (error.code === '23505') {
-        return res.status(400).json({ error: "MÃ£ kho Ä‘Ã£ tá»“n táº¡i" });
+        return res.status(400).json({ error: "Mã kho đã tồn tại" });
       }
       res.status(500).json({ error: "Failed to update warehouse" });
     }
@@ -586,32 +585,15 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           }
         }
       }
-      const dynamicQuantityQuery = sql<number>`
-        COALESCE(
-          (
-            SELECT SUM(
-              CASE 
-                WHEN type IN ('NHAP', 'BO_GHI_SO') THEN quantity
-                WHEN type IN ('XUAT', 'GHI_SO') THEN -quantity
-                ELSE 0 
-              END
-            )
-            FROM stock_transactions st
-            WHERE st.product_id = products.id
-          ), 0
-        )
-      `.mapWith(Number);
-
-      if (lowStock === "true") conditions.push(sql`${dynamicQuantityQuery} <= ${products.minStock}`);
-      if (inStock === "true") conditions.push(sql`${dynamicQuantityQuery} > 0`);
-
+      if (lowStock === "true") conditions.push(sql`${products.quantity} <= ${products.minStock}`);
+      if (inStock === "true") conditions.push(sql`${products.quantity} > 0`);
       const query = db.select({
         id: products.id,
         code: products.code,
         name: products.name,
         category: products.category,
         unit: products.unit,
-        quantity: dynamicQuantityQuery,
+        quantity: products.quantity,
         price: products.price,
         minStock: products.minStock,
         isHidden: products.isHidden,
@@ -641,7 +623,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         .values({
           code,
           name,
-          category: category || "ChÆ°a phÃ¢n loáº¡i",
+          category: category || "Chưa phân loại",
           unit: unit || "",
           quantity: Number(quantity) || 0,
           price: Number(price) || 0,
@@ -654,10 +636,9 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           productId: newProd.id,
           type: "NHAP",
           quantity: newProd.quantity,
-          note: "Nháº­p tá»“n kho khá»Ÿi táº¡o khi thÃªm má»›i sáº£n pháº©m",
+          note: "Nhập tồn kho khởi tạo khi thêm mới sản phẩm",
           userEmail: req.user?.email || "system",
-          warehouseId: Number(warehouseId),
-          createdAt: new Date("2020-01-01T00:00:00.000Z")
+          warehouseId: Number(warehouseId)
         });
       }
       res.status(201).json(newProd);
@@ -722,7 +703,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         productId: product.id,
         type,
         quantity: qty,
-        note: note || (type === "NHAP" ? "Nháº­p kho thá»§ cÃ´ng" : "Xuáº¥t kho thá»§ cÃ´ng"),
+        note: note || (type === "NHAP" ? "Nhập kho thủ công" : "Xuất kho thủ công"),
         userEmail: req.user?.email || "system",
         warehouseId: Number(warehouseId)
       }).returning();
@@ -739,27 +720,8 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       const [product] = await db.select().from(products).where(eq(products.id, id));
       if (!product) return res.status(404).json({ error: "Product not found" });
       const txList = await db.select().from(stockTransactions).where(eq(stockTransactions.productId, id)).orderBy(asc(stockTransactions.createdAt), asc(stockTransactions.id));
-      
-      const groupedTxs: any[] = [];
-      const docTypeMap = new Map<string, any>();
-      
-      for (const tx of txList) {
-        if (tx.docNumber) {
-          const key = `${tx.docNumber}_${tx.type}`;
-          if (docTypeMap.has(key)) {
-            docTypeMap.get(key).quantity += tx.quantity;
-          } else {
-            const newTx = { ...tx };
-            docTypeMap.set(key, newTx);
-            groupedTxs.push(newTx);
-          }
-        } else {
-          groupedTxs.push(tx);
-        }
-      }
-
       let runningBalance = 0;
-      const enrichedList = groupedTxs.map(tx => {
+      const enrichedList = txList.map(tx => {
         if (tx.type === "NHAP" || tx.type === "BO_GHI_SO") {
           runningBalance += tx.quantity;
         } else if (tx.type === "XUAT" || tx.type === "GHI_SO") {
@@ -812,7 +774,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
                productId: existing.id,
                type: diff > 0 ? "NHAP" : "XUAT",
                quantity: Math.abs(diff),
-               note: "Cáº­p nháº­t tá»“n kho tá»« import Excel",
+               note: "Cập nhật tồn kho từ import Excel",
                userEmail: req.user?.email || "system",
                warehouseId: Number(warehouseId)
              });
@@ -826,7 +788,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           .values({
             code: trimmedCode,
             name: String(name).trim(),
-            category: category ? String(category).trim() : "ChÆ°a phÃ¢n loáº¡i",
+            category: category ? String(category).trim() : "Chưa phân loại",
             unit: unit ? String(unit).trim() : "",
             quantity: qty,
             price: prc,
@@ -839,10 +801,9 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             productId: newProd.id,
             type: "NHAP",
             quantity: qty,
-            note: "Nháº­p tá»“n kho khá»Ÿi táº¡o tá»« import Excel",
+            note: "Nhập tồn kho khởi tạo từ import Excel",
             userEmail: req.user?.email || "system",
-            warehouseId: Number(warehouseId),
-            createdAt: new Date("2020-01-01T00:00:00.000Z")
+            warehouseId: Number(warehouseId)
           });
         }
         importedCount++;
@@ -952,8 +913,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         .from(purchaseOrders)
         .where(and(
           eq(purchaseOrders.supplierId, supplierId),
-          eq(purchaseOrders.isRecorded, true),
-          eq(purchaseOrders.isDeleted, false)
+          eq(purchaseOrders.isRecorded, true)
         ))
         .orderBy(desc(purchaseOrders.createdAt));
         
@@ -1059,7 +1019,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       const customerId = parseInt(req.params.id);
       const list = await db.select()
         .from(invoices)
-        .where(and(eq(invoices.customerId, customerId), eq(invoices.isDeleted, false)))
+        .where(eq(invoices.customerId, customerId))
         .orderBy(desc(invoices.createdAt));
       res.json(list);
     } catch (error: any) {
@@ -1159,15 +1119,9 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       const page = parseInt(req.query.page as string) || 1;
       const limit = 10;
       const offset = (page - 1) * limit;
-      const { search, status, isRecorded, startDate, endDate, sort, isDeleted } = req.query;
+      const { search, status, isRecorded, startDate, endDate, sort } = req.query;
 
       let conditions = [];
-
-      if (isDeleted !== undefined) {
-        conditions.push(eq(invoices.isDeleted, isDeleted === 'true'));
-      } else {
-        conditions.push(eq(invoices.isDeleted, false));
-      }
 
       if (isRecorded !== undefined) {
         conditions.push(eq(invoices.isRecorded, isRecorded === 'true'));
@@ -1213,7 +1167,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             });
             conditions.push(and(...wordConditions));
           } else {
-            const VI_ACCENTS = 'Ã¡Ã áº£Ã£áº¡Ã¢áº¥áº§áº©áº«áº­Äƒáº¯áº±áº³áºµáº·Ä‘Ã©Ã¨áº»áº½áº¹Ãªáº¿á»á»ƒá»…á»‡Ã­Ã¬á»‰Ä©á»‹Ã³Ã²á»Ãµá»Ã´á»‘á»“á»•á»—á»™Æ¡á»›á»á»Ÿá»¡á»£ÃºÃ¹á»§Å©á»¥Æ°á»©á»«á»­á»¯á»±Ã½á»³á»·á»¹á»µÃÃ€áº¢Ãƒáº Ã‚áº¤áº¦áº¨áºªáº¬Ä‚áº®áº°áº²áº´áº¶ÄÃ‰Ãˆáººáº¼áº¸ÃŠáº¾á»€á»‚á»„á»†ÃÃŒá»ˆÄ¨á»ŠÃ“Ã’á»ŽÃ•á»ŒÃ”á»á»’á»”á»–á»˜Æ á»šá»œá»žá» á»¢ÃšÃ™á»¦Å¨á»¤Æ¯á»¨á»ªá»¬á»®á»°Ãá»²á»¶á»¸á»´';
+            const VI_ACCENTS = 'áàảãạâấầẩẫậăắằẳẵặđéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵÁÀẢÃẠÂẤẦẨẪẬĂẮẰẲẴẶĐÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴ';
             const VI_NON_ACCENTS = 'aaaaaaaaaaaaaaaaadeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyAAAAAAAAAAAAAAAAADEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYY';
             const wordConditions = words.map(word => {
               const pattern = `%${word}%`;
@@ -1356,7 +1310,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     }
   });
 
-  // Create Invoice (Draft - goes directly into "Trang chá»" as isRecorded: false)
+  // Create Invoice (Draft - goes directly into "Trang chờ" as isRecorded: false)
   app.post("/api/invoices", requireAuth, async (req: AuthRequest, res) => {
     try {
       const { customerId, status, depositEnabled, items, invoiceNumberCustom, customCustomerName } = req.body;
@@ -1365,7 +1319,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         return res.status(400).json({ error: "Invoice must have at least one product" });
       }
 
-      const activeStatus = status || "CTT"; // default ChÆ°a thanh toÃ¡n
+      const activeStatus = status || "CTT"; // default Chưa thanh toán
       const { documentCode, invoiceNumber } = await generateInvoiceCodes(activeStatus);
 
       // Total invoice amount
@@ -1398,7 +1352,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           customerId: customerId ? Number(customerId) : null,
           customCustomerName: customCustomerName || null,
           status: activeStatus,
-          isRecorded: false, // Start as draft (Trang chá»)
+          isRecorded: false, // Start as draft (Trang chờ)
           depositEnabled: !!depositEnabled,
           totalAmount: totalAmount,
           createdBy: req.user?.dbId,
@@ -1416,8 +1370,8 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       // Log invoice action
       await logInvoiceAction(
         newInvoice.id,
-        "Táº O Má»šI",
-        `ÄÃ£ táº¡o hÃ³a Ä‘Æ¡n táº¡m (ChÆ°a ghi sá»•). MÃ£ chá»©ng tá»«: ${documentCode}, Sá»‘ hÃ³a Ä‘Æ¡n: ${newInvoice.invoiceNumber}, Tá»•ng tiá»n: ${totalAmount.toLocaleString('vi-VN')} VND.`,
+        "TẠO MỚI",
+        `Đã tạo hóa đơn tạm (Chưa ghi sổ). Mã chứng từ: ${documentCode}, Số hóa đơn: ${newInvoice.invoiceNumber}, Tổng tiền: ${totalAmount.toLocaleString('vi-VN')} VND.`,
         req.user?.email || "system"
       );
 
@@ -1440,7 +1394,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         createdBy: req.user?.dbId,
       }).returning();
       
-      await logInvoiceAction(newInvoice.id, 'Táº O Má»šI', 'Táº¡o hÃ³a Ä‘Æ¡n má»›i (trá»‘ng)', req.user?.email || 'Unknown');
+      await logInvoiceAction(newInvoice.id, 'TẠO MỚI', 'Tạo hóa đơn mới (trống)', req.user?.email || 'Unknown');
       res.json(newInvoice);
     } catch (error) {
       console.error("POST /api/invoices/create-blank failed:", error);
@@ -1463,36 +1417,26 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
 
         // If it is already recorded, check if items were changed. If items changed, block unless unposted
         if (existing.isRecorded && items && Array.isArray(items)) {
-          return res.status(400).json({ error: "HÃ³a Ä‘Æ¡n Ä‘Ã£ ghi sá»•. Vui lÃ²ng Bá»Ž GHI Sá»” trÆ°á»›c khi chá»‰nh sá»­a danh sÃ¡ch sáº£n pháº©m." });
+          return res.status(400).json({ error: "Hóa đơn đã ghi sổ. Vui lòng BỎ GHI SỔ trước khi chỉnh sửa danh sách sản phẩm." });
         }
 
-             
-        const oldCreatedAt = existing.createdAt ? new Date(existing.createdAt) : new Date();
-        const newCreatedAt = createdAt ? new Date(createdAt) : oldCreatedAt;
-
-        let dateChanged = false;
-        if (oldCreatedAt.getFullYear() !== newCreatedAt.getFullYear() || 
-            oldCreatedAt.getMonth() !== newCreatedAt.getMonth() || 
-            oldCreatedAt.getDate() !== newCreatedAt.getDate()) {
-          dateChanged = true;
-        }
+        const newCreatedAt = createdAt ? new Date(createdAt) : (existing.createdAt ? new Date(existing.createdAt) : new Date());
 
         let docCode = existing.documentCode;
         let updateStatus = existing.status;
         if (status && status !== existing.status) {
           updateStatus = status;
-        }
-
-        if (dateChanged || status !== existing.status) {
-           const codes = await generateInvoiceCodes(updateStatus, newCreatedAt);
-           docCode = codes.documentCode;
+          docCode = await getRegeneratedDocumentCode(id, status);
         } else if (documentCode) {
-           docCode = documentCode; 
+          docCode = documentCode; // support custom update
         }
 
+        docCode = updateCodeWithNewDate(docCode, newCreatedAt);
         const originalInvoiceNumber = invoiceNumber !== undefined ? (String(invoiceNumber).trim() || "0") : existing.invoiceNumber;
-        const finalInvoiceNumber = dateChanged ? updateCodeWithNewDate(originalInvoiceNumber, newCreatedAt) : originalInvoiceNumber;
-        
+        const finalInvoiceNumber = updateCodeWithNewDate(originalInvoiceNumber, newCreatedAt);
+
+        let totalAmount = existing.totalAmount;
+
         // Update basic fields
         await db.update(invoices)
           .set({
@@ -1529,7 +1473,6 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
             });
           }
         }
-        let totalAmount = existing.totalAmount;
 
         // If we are in draft mode and items are sent, recreate them
         if (!existing.isRecorded && items && Array.isArray(items)) {
@@ -1567,8 +1510,8 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
 
         await logInvoiceAction(
           id,
-          "CHá»ˆNH Sá»¬A",
-          `ÄÃ£ cáº­p nháº­t thÃ´ng tin hÃ³a Ä‘Æ¡n. Tráº¡ng thÃ¡i má»›i: ${updateStatus}. MÃ£ chá»©ng tá»« má»›i: ${docCode}. Tá»•ng tiá»n: ${totalAmount.toLocaleString('vi-VN')} VND.`,
+          "CHỈNH SỬA",
+          `Đã cập nhật thông tin hóa đơn. Trạng thái mới: ${updateStatus}. Mã chứng từ mới: ${docCode}. Tổng tiền: ${totalAmount.toLocaleString('vi-VN')} VND.`,
           req.user?.email || "system"
         );
 
@@ -1591,7 +1534,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     }
   });
 
-  // GHI Sá»” (Record Bill - subtract from inventory, move from Pending to Statistics)
+  // GHI SỔ (Record Bill - subtract from inventory, move from Pending to Statistics)
   app.post("/api/invoices/:id/record", requireAuth, async (req: AuthRequest, res) => {
     let retries = 3;
     while (retries > 0) {
@@ -1604,41 +1547,22 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         }
 
         if (invoice.isRecorded) {
-          return res.status(400).json({ error: "HÃ³a Ä‘Æ¡n nÃ y Ä‘Ã£ ghi sá»• rá»“i." });
+          return res.status(400).json({ error: "Hóa đơn này đã ghi sổ rồi." });
         }
 
         // Load invoice items
         const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
         
-        const invoiceDate = invoice.createdAt ? new Date(invoice.createdAt) : new Date();
-
-        // Verification: Ensure enough stock for all items at the time of the invoice
+        // Verification: Ensure enough stock for all items
         for (const itm of items) {
           if (itm.productId) {
             const [prod] = await db.select().from(products).where(eq(products.id, itm.productId));
             if (!prod) {
-              return res.status(400).json({ error: `Sáº£n pháº©m vá»›i mÃ£ ${itm.productCode} khÃ´ng tá»“n táº¡i trong kho.` });
+              return res.status(400).json({ error: `Sản phẩm với mã ${itm.productCode} không tồn tại trong kho.` });
             }
-            
-            // Calculate historical stock up to invoiceDate
-            const txList = await db.select()
-              .from(stockTransactions)
-              .where(
-                and(
-                  eq(stockTransactions.productId, itm.productId),
-                  lte(stockTransactions.createdAt, invoiceDate)
-                )
-              );
-            
-            let historicalStock = 0;
-            for (const tx of txList) {
-              if (tx.type === "NHAP" || tx.type === "BO_GHI_SO") historicalStock += tx.quantity;
-              else if (tx.type === "XUAT" || tx.type === "GHI_SO") historicalStock -= tx.quantity;
-            }
-
-            if (historicalStock < itm.quantity) {
+            if (prod.quantity < itm.quantity) {
               return res.status(400).json({
-                error: `KhÃ´ng Ä‘á»§ tá»“n kho cho sáº£n pháº©m "${itm.productName}" (MÃ£: ${itm.productCode}) táº¡i thá»i Ä‘iá»ƒm ${invoiceDate.toLocaleString('vi-VN')}. Tá»“n kho lÃºc Ä‘Ã³: ${historicalStock}, Cáº§n xuáº¥t: ${itm.quantity}.`
+                error: `Không đủ tồn kho tổng cho sản phẩm "${itm.productName}" (Mã: ${itm.productCode}). Hiện tại: ${prod.quantity}, Cần xuất: ${itm.quantity}.`
               });
             }
           }
@@ -1665,7 +1589,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
               productId: itm.productId,
               type: "GHI_SO",
               quantity: itm.quantity,
-              note: `Trá»« kho tá»± Ä‘á»™ng khi ghi sá»• hÃ³a Ä‘Æ¡n ${invoice.invoiceNumber} (${invoice.documentCode})`,
+              note: `Trừ kho tự động khi ghi sổ hóa đơn ${invoice.invoiceNumber} (${invoice.documentCode})`,
               userEmail: req.user?.email || "system",
               warehouseId: itm.warehouseId || null,
               docNumber: invoice.documentCode,
@@ -1686,12 +1610,12 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
 
         await logInvoiceAction(
           id,
-          "GHI Sá»”",
-          `XÃ¡c nháº­n ghi sá»• hÃ³a Ä‘Æ¡n. ÄÃ£ trá»« kho tÆ°Æ¡ng á»©ng cÃ¡c sáº£n pháº©m. Tráº¡ng thÃ¡i: ${invoice.status}, MÃ£ chá»©ng tá»«: ${invoice.documentCode}.`,
+          "GHI SỔ",
+          `Xác nhận ghi sổ hóa đơn. Đã trừ kho tương ứng các sản phẩm. Trạng thái: ${invoice.status}, Mã chứng từ: ${invoice.documentCode}.`,
           req.user?.email || "system"
         );
 
-        res.json({ success: true, message: "Ghi sá»• thÃ nh cÃ´ng. ÄÃ£ cáº­p nháº­t tá»“n kho váº­t tÆ°." });
+        res.json({ success: true, message: "Ghi sổ thành công. Đã cập nhật tồn kho vật tư." });
         return; // Success, exit retry loop
       } catch (error: any) {
         retries--;
@@ -1710,7 +1634,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     }
   });
 
-  // Bá»Ž GHI Sá»” (Unrecord Bill - add back to inventory, move from Statistics to Pending)
+  // BỎ GHI SỔ (Unrecord Bill - add back to inventory, move from Statistics to Pending)
   app.post("/api/invoices/:id/unrecord", requireAuth, async (req: AuthRequest, res) => {
     let retries = 3;
     while (retries > 0) {
@@ -1723,7 +1647,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         }
 
         if (!invoice.isRecorded) {
-          return res.status(400).json({ error: "HÃ³a Ä‘Æ¡n nÃ y chÆ°a Ä‘Æ°á»£c ghi sá»•." });
+          return res.status(400).json({ error: "Hóa đơn này chưa được ghi sổ." });
         }
 
         // Load invoice items
@@ -1746,7 +1670,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
                 and(
                   eq(stockTransactions.productId, itm.productId),
                   eq(stockTransactions.type, "GHI_SO"),
-                  eq(stockTransactions.docNumber, invoice.documentCode)
+                  like(stockTransactions.note, `%${invoice.documentCode}%`)
                 )
               );
           }
@@ -1762,12 +1686,12 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
 
         await logInvoiceAction(
           id,
-          "Bá»Ž GHI Sá»”",
-          `Bá» ghi sá»• hÃ³a Ä‘Æ¡n. ÄÃ£ hoÃ n tráº£ hÃ ng hÃ³a láº¡i vÃ o kho. HÃ³a Ä‘Æ¡n quay trá»Ÿ vá» tráº¡ng thÃ¡i Chá» xÃ¡c nháº­n.`,
+          "BỎ GHI SỔ",
+          `Bỏ ghi sổ hóa đơn. Đã hoàn trả hàng hóa lại vào kho. Hóa đơn quay trở về trạng thái Chờ xác nhận.`,
           req.user?.email || "system"
         );
 
-        res.json({ success: true, message: "Bá» ghi sá»• thÃ nh cÃ´ng. ÄÃ£ hoÃ n kho cÃ¡c sáº£n pháº©m." });
+        res.json({ success: true, message: "Bỏ ghi sổ thành công. Đã hoàn kho các sản phẩm." });
         return; // Success, exit retry loop
       } catch (error: any) {
         retries--;
@@ -1786,7 +1710,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     }
   });
 
-  // DUPLICATE INVOICE (NhÃ¢n báº£n hÃ³a Ä‘Æ¡n)
+  // DUPLICATE INVOICE (Nhân bản hóa đơn)
   app.post("/api/invoices/:id/duplicate", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1809,7 +1733,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           documentCode,
           customerId: invoice.customerId,
           status: invoice.status,
-          isRecorded: false, // Starts as draft (Trang chá»)
+          isRecorded: false, // Starts as draft (Trang chờ)
           depositEnabled: invoice.depositEnabled,
           totalAmount: invoice.totalAmount,
           createdBy: req.user?.dbId,
@@ -1834,8 +1758,8 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
 
       await logInvoiceAction(
         newInvoice.id,
-        "NHÃ‚N Báº¢N",
-        `NhÃ¢n báº£n tá»« hÃ³a Ä‘Æ¡n cÅ© #${invoice.invoiceNumber} (${invoice.documentCode})`,
+        "NHÂN BẢN",
+        `Nhân bản từ hóa đơn cũ #${invoice.invoiceNumber} (${invoice.documentCode})`,
         req.user?.email || "system"
       );
 
@@ -1846,7 +1770,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     }
   });
 
-  // SOFT DELETE INVOICE (Move to Trash)
+  // DELETE INVOICE
   app.delete("/api/invoices/:id", requireAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1856,82 +1780,29 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
         return res.status(404).json({ error: "Invoice not found" });
       }
 
-      // Automatically unrecord if it is recorded
+      // If recorded, force unrecord or fail
       if (invoice.isRecorded) {
-        const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id));
-        for (const itm of items) {
-          if (itm.productId) {
-            await db.update(products)
-              .set({
-                quantity: sql`${products.quantity} + ${itm.quantity}`,
-                updatedAt: new Date(),
-              })
-              .where(eq(products.id, itm.productId));
-              
-            await db.delete(stockTransactions)
-              .where(
-                and(
-                  eq(stockTransactions.productId, itm.productId),
-                  eq(stockTransactions.type, "GHI_SO"),
-                  eq(stockTransactions.docNumber, invoice.documentCode)
-                )
-              );
-          }
-        }
-      }
-
-      await db.update(invoices).set({ 
-        isDeleted: true, 
-        deletedAt: new Date(),
-        isRecorded: false // Force to false since it's now in trash
-      }).where(eq(invoices.id, id));
-      
-      res.json({ message: "Invoice moved to trash" });
-    } catch (error: any) {
-      console.error("DELETE invoice failed:", error);
-      res.status(500).json({ error: "Failed to move invoice to trash" });
-    }
-  });
-
-  // RESTORE INVOICE
-  app.post("/api/invoices/:id/restore", requireAuth, async (req: AuthRequest, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await db.update(invoices).set({ isDeleted: false, deletedAt: null }).where(eq(invoices.id, id));
-      res.json({ message: "Invoice restored successfully" });
-    } catch (error: any) {
-      console.error("RESTORE invoice failed:", error);
-      res.status(500).json({ error: "Failed to restore invoice" });
-    }
-  });
-
-  // PERMANENT DELETE INVOICE
-  app.delete("/api/invoices/:id/permanent", requireAuth, async (req: AuthRequest, res) => {
-    try {
-      const id = parseInt(req.params.id);
-
-      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
-      if (!invoice) {
-        return res.status(404).json({ error: "Invoice not found" });
+        return res.status(400).json({ error: "Hóa đơn đã ghi sổ. Vui lòng bỏ ghi sổ trước khi xóa." });
       }
 
       // Delete cascade is supported by foreign key setup in schema, but we double-verify
       await db.delete(invoices).where(eq(invoices.id, id));
-      res.json({ message: "Invoice deleted permanently" });
+
+      res.json({ message: "Invoice deleted successfully" });
     } catch (error: any) {
-      console.error("PERMANENT DELETE invoice failed:", error);
-      res.status(500).json({ error: "Failed to permanently delete invoice" });
+      console.error("DELETE invoice failed:", error);
+      res.status(500).json({ error: "Failed to delete invoice" });
     }
   });
 
-  // ADD DEPOSIT (Cá»c nhiá»u láº§n)
+  // ADD DEPOSIT (Cọc nhiều lần)
   app.post("/api/invoices/:id/deposits", requireAuth, async (req: AuthRequest, res) => {
     try {
       const invoiceId = parseInt(req.params.id);
       const { amount, paymentMethod, note } = req.body;
 
       if (!amount || Number(amount) <= 0 || !paymentMethod) {
-        return res.status(400).json({ error: "Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ sá»‘ tiá»n cá»c há»£p lá»‡ vÃ  phÆ°Æ¡ng thá»©c." });
+        return res.status(400).json({ error: "Vui lòng nhập đầy đủ số tiền cọc hợp lệ và phương thức." });
       }
 
       const [invoice] = await db.select().from(invoices).where(eq(invoices.id, invoiceId));
@@ -1944,14 +1815,14 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
           invoiceId,
           amount: Number(amount),
           paymentMethod,
-          note: note || "KhÃ¡ch hÃ ng Ä‘áº·t cá»c",
+          note: note || "Khách hàng đặt cọc",
         })
         .returning();
 
       await logInvoiceAction(
         invoiceId,
-        "Äáº¶T Cá»ŒC",
-        `ÄÃ£ nháº­n tiá»n Ä‘áº·t cá»c: ${Number(amount).toLocaleString('vi-VN')} VND qua ${paymentMethod === 'TM' ? 'Tiá»n máº·t' : 'Chuyá»ƒn khoáº£n'}. Ghi chÃº: ${note || 'khÃ´ng cÃ³'}.`,
+        "ĐẶT CỌC",
+        `Đã nhận tiền đặt cọc: ${Number(amount).toLocaleString('vi-VN')} VND qua ${paymentMethod === 'TM' ? 'Tiền mặt' : 'Chuyển khoản'}. Ghi chú: ${note || 'không có'}.`,
         req.user?.email || "system"
       );
 
@@ -1968,13 +1839,13 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       // 1. Fetch Products Data
       const dbProducts = await db.select().from(products).orderBy(asc(products.code));
       const productsSheetData = dbProducts.map(p => ({
-        "MÃ£ sáº£n pháº©m": p.code,
-        "TÃªn sáº£n pháº©m": p.name,
-        "Danh má»¥c": p.category,
-        "Sá»‘ lÆ°á»£ng tá»“n kho": p.quantity,
-        "ÄÆ¡n giÃ¡ máº·c Ä‘á»‹nh (VND)": p.price,
-        "NgÆ°á»¡ng tá»“n tháº¥p": p.minStock,
-        "Tráº¡ng thÃ¡i": p.quantity <= p.minStock ? "Cáº£nh bÃ¡o: Tá»“n kho tháº¥p" : "BÃ¬nh thÆ°á»ng"
+        "Mã sản phẩm": p.code,
+        "Tên sản phẩm": p.name,
+        "Danh mục": p.category,
+        "Số lượng tồn kho": p.quantity,
+        "Đơn giá mặc định (VND)": p.price,
+        "Ngưỡng tồn thấp": p.minStock,
+        "Trạng thái": p.quantity <= p.minStock ? "Cảnh báo: Tồn kho thấp" : "Bình thường"
       }));
 
       // 2. Fetch Invoices Data
@@ -1991,23 +1862,22 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       })
       .from(invoices)
       .leftJoin(customers, eq(invoices.customerId, customers.id))
-      .where(eq(invoices.isDeleted, false))
       .orderBy(desc(invoices.createdAt));
 
       const invoicesSheetData = dbInvoices.map(inv => {
-        let txtStatus = "ChÆ°a thanh toÃ¡n";
-        if (inv.status === "TM") txtStatus = "Thanh toÃ¡n tiá»n máº·t";
-        else if (inv.status === "CK") txtStatus = "Chuyá»ƒn khoáº£n";
+        let txtStatus = "Chưa thanh toán";
+        if (inv.status === "TM") txtStatus = "Thanh toán tiền mặt";
+        else if (inv.status === "CK") txtStatus = "Chuyển khoản";
 
         return {
-          "Sá»‘ hÃ³a Ä‘Æ¡n": inv.invoiceNumber,
-          "MÃ£ chá»©ng tá»«": inv.documentCode,
-          "KhÃ¡ch hÃ ng": inv.customerName || "VÃ£ng lai",
-          "Sá»‘ Ä‘iá»‡n thoáº¡i": inv.customerPhone || "",
-          "Tráº¡ng thÃ¡i thanh toÃ¡n": txtStatus,
-          "TÃ¬nh tráº¡ng ghi sá»•": inv.isRecorded ? "ÄÃ£ ghi sá»• (Trá»« kho)" : "ChÆ°a ghi sá»• (Chá»)",
-          "Tá»•ng thÃ nh tiá»n (VND)": inv.totalAmount,
-          "NgÃ y táº¡o": inv.createdAt ? new Date(inv.createdAt).toLocaleString('vi-VN') : ""
+          "Số hóa đơn": inv.invoiceNumber,
+          "Mã chứng từ": inv.documentCode,
+          "Khách hàng": inv.customerName || "Vãng lai",
+          "Số điện thoại": inv.customerPhone || "",
+          "Trạng thái thanh toán": txtStatus,
+          "Tình trạng ghi sổ": inv.isRecorded ? "Đã ghi sổ (Trừ kho)" : "Chưa ghi sổ (Chờ)",
+          "Tổng thành tiền (VND)": inv.totalAmount,
+          "Ngày tạo": inv.createdAt ? new Date(inv.createdAt).toLocaleString('vi-VN') : ""
         };
       });
 
@@ -2017,8 +1887,8 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
       const wsProducts = xlsx.utils.json_to_sheet(productsSheetData);
       const wsInvoices = xlsx.utils.json_to_sheet(invoicesSheetData);
 
-      xlsx.utils.book_append_sheet(wb, wsProducts, "Danh sÃ¡ch váº­t tÆ°");
-      xlsx.utils.book_append_sheet(wb, wsInvoices, "Danh sÃ¡ch hÃ³a Ä‘Æ¡n");
+      xlsx.utils.book_append_sheet(wb, wsProducts, "Danh sách vật tư");
+      xlsx.utils.book_append_sheet(wb, wsInvoices, "Danh sách hóa đơn");
 
       // Write binary buffer
       const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
@@ -2121,7 +1991,7 @@ async function generateInvoiceCodes(status: string, targetDate: Date = new Date(
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(Number(PORT), "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
