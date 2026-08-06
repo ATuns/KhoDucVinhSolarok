@@ -43,8 +43,8 @@ function updateCodeWithNewDate(code: string | null | undefined, newDate: Date): 
   return parts.join('-');
 }
 
-async function generatePOCodes(status: string, targetDate: Date = new Date()) {
-  const now = targetDate;
+async function generatePOCodes(status: string) {
+  const now = new Date();
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
@@ -52,9 +52,9 @@ async function generatePOCodes(status: string, targetDate: Date = new Date()) {
   const yyyymmdd = `${yyyy}${mm}${dd}`;
   const yymmdd = `${String(yyyy).slice(-2)}${mm}${dd}`;
   
-  const startOfDay = new Date(targetDate);
+  const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(targetDate);
+  const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
   
   const todayPOs = await db.select({ documentCode: purchaseOrders.documentCode })
@@ -155,15 +155,9 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
     const page = parseInt(req.query.page as string) || 1;
     const limit = 10;
     const offset = (page - 1) * limit;
-    const { search, status, isRecorded, startDate, endDate, sort, isDeleted } = req.query;
+    const { search, status, isRecorded, startDate, endDate, sort } = req.query;
 
     let conditions = [];
-
-    if (isDeleted !== undefined) {
-      conditions.push(eq(purchaseOrders.isDeleted, isDeleted === 'true'));
-    } else {
-      conditions.push(eq(purchaseOrders.isDeleted, false));
-    }
 
     if (isRecorded !== undefined) {
       conditions.push(eq(purchaseOrders.isRecorded, isRecorded === 'true'));
@@ -209,7 +203,7 @@ purchaseOrdersRouter.get("/purchase-orders", requireAuth as any, async (req: any
           });
           conditions.push(and(...wordConditions));
         } else {
-          const VI_ACCENTS = 'Ã¡Ã áº£Ã£áº¡Ã¢áº¥áº§áº©áº«áº­Äƒáº¯áº±áº³áºµáº·Ä‘Ã©Ã¨áº»áº½áº¹Ãªáº¿á»á»ƒá»…á»‡Ã­Ã¬á»‰Ä©á»‹Ã³Ã²á»Ãµá»Ã´á»‘á»“á»•á»—á»™Æ¡á»›á»á»Ÿá»¡á»£ÃºÃ¹á»§Å©á»¥Æ°á»©á»«á»­á»¯á»±Ã½á»³á»·á»¹á»µÃÃ€áº¢Ãƒáº Ã‚áº¤áº¦áº¨áºªáº¬Ä‚áº®áº°áº²áº´áº¶ÄÃ‰Ãˆáººáº¼áº¸ÃŠáº¾á»€á»‚á»„á»†ÃÃŒá»ˆÄ¨á»ŠÃ“Ã’á»ŽÃ•á»ŒÃ”á»á»’á»”á»–á»˜Æ á»šá»œá»žá» á»¢ÃšÃ™á»¦Å¨á»¤Æ¯á»¨á»ªá»¬á»®á»°Ãá»²á»¶á»¸á»´';
+          const VI_ACCENTS = 'áàảãạâấầẩẫậăắằẳẵặđéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵÁÀẢÃẠÂẤẦẨẪẬĂẮẰẲẴẶĐÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴ';
           const VI_NON_ACCENTS = 'aaaaaaaaaaaaaaaaadeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyAAAAAAAAAAAAAAAAADEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYY';
           const wordConditions = words.map(word => {
             const pattern = `%${word}%`;
@@ -391,7 +385,7 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
         if (item.productId) {
           const [product] = await db.select().from(products).where(eq(products.id, item.productId));
           if (product) {
-            const newQty = product.quantity + item.quantity; // Nháº­p kho -> TÄƒng sá»‘ lÆ°á»£ng
+            const newQty = product.quantity + item.quantity; // Nhập kho -> Tăng số lượng
             await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
             
             let partnerName = null;
@@ -403,7 +397,7 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
               productId: item.productId,
               type: 'NHAP', // Changed to NHAP
               quantity: item.quantity,
-              note: `Ghi sá»• phiáº¿u nháº­p hÃ ng ${newPO.poNumber} (${newPO.documentCode})`,
+              note: `Ghi sổ phiếu nhập hàng ${newPO.poNumber} (${newPO.documentCode})`,
               userEmail,
               docNumber: newPO.documentCode,
               partnerName: partnerName,
@@ -416,9 +410,9 @@ purchaseOrdersRouter.post("/purchase-orders", requireAuth as any, async (req: an
       }
     }
 
-    await logPOAction(newPO.id, 'Táº O Má»šI', `Táº¡o phiáº¿u nháº­p má»›i ${newPO.poNumber}`, userEmail);
+    await logPOAction(newPO.id, 'TẠO MỚI', `Tạo phiếu nhập mới ${newPO.poNumber}`, userEmail);
     if (newPO.isRecorded) {
-      await logPOAction(newPO.id, 'GHI Sá»”', `Ghi sá»• phiáº¿u nháº­p hÃ ng, cá»™ng sá»‘ lÆ°á»£ng kho`, userEmail);
+      await logPOAction(newPO.id, 'GHI SỔ', `Ghi sổ phiếu nhập hàng, cộng số lượng kho`, userEmail);
     }
 
     res.status(201).json(newPO);
@@ -439,7 +433,7 @@ purchaseOrdersRouter.post("/purchase-orders/create-blank", requireAuth as any, a
       totalAmount: 0
     }).returning();
     
-    await logPOAction(newPO.id, 'Táº O Má»šI', 'Táº¡o phiáº¿u nháº­p má»›i (trá»‘ng)', req.user?.email || 'Unknown');
+    await logPOAction(newPO.id, 'TẠO MỚI', 'Tạo phiếu nhập mới (trống)', req.user?.email || 'Unknown');
     res.json(newPO);
   } catch (error) {
     console.error("POST /api/purchase-orders/create-blank failed:", error);
@@ -461,7 +455,7 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
       }
 
       if (existing.isRecorded && items && Array.isArray(items)) {
-        return res.status(400).json({ error: "Phiáº¿u nháº­p Ä‘Ã£ ghi sá»•. Vui lÃ²ng Bá»Ž GHI Sá»” trÆ°á»›c khi chá»‰nh sá»­a danh sÃ¡ch sáº£n pháº©m." });
+        return res.status(400).json({ error: "Phiếu nhập đã ghi sổ. Vui lòng BỎ GHI SỔ trước khi chỉnh sửa danh sách sản phẩm." });
       }
 
       let totalAmount = existing.totalAmount;
@@ -469,30 +463,20 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
         totalAmount = items.reduce((sum: number, item: any) => sum + (item.quantity * item.price), 0);
       }
 
-      const oldCreatedAt = existing.createdAt ? new Date(existing.createdAt) : new Date();
-      const newCreatedAt = createdAt ? new Date(createdAt) : oldCreatedAt;
-
-      let dateChanged = false;
-      if (oldCreatedAt.getFullYear() !== newCreatedAt.getFullYear() || 
-          oldCreatedAt.getMonth() !== newCreatedAt.getMonth() || 
-          oldCreatedAt.getDate() !== newCreatedAt.getDate()) {
-        dateChanged = true;
-      }
-      
       let updateStatus = existing.status;
+      let newDocumentCode = existing.documentCode;
+
       if (status && status !== existing.status) {
         updateStatus = status;
+        newDocumentCode = await getRegeneratedPODocumentCode(id, status);
       }
 
-      let newDocumentCode = existing.documentCode;
-      if (dateChanged || status !== existing.status) {
-         const codes = await generatePOCodes(updateStatus, newCreatedAt);
-         newDocumentCode = codes.documentCode;
-      }
+      const newCreatedAt = createdAt ? new Date(createdAt) : (existing.createdAt ? new Date(existing.createdAt) : new Date());
 
+      newDocumentCode = updateCodeWithNewDate(newDocumentCode, newCreatedAt);
       const originalPoNumber = poNumber !== undefined ? (String(poNumber).trim() || "0") : existing.poNumber;
-      const finalPoNumber = dateChanged ? updateCodeWithNewDate(originalPoNumber, newCreatedAt) : originalPoNumber;
-      
+      const finalPoNumber = updateCodeWithNewDate(originalPoNumber, newCreatedAt);
+
       await db.update(purchaseOrders)
         .set({
           poNumber: finalPoNumber,
@@ -551,7 +535,7 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
         }
       }
 
-      await logPOAction(id, 'CHá»ˆNH Sá»¬A', `Chá»‰nh sá»­a thÃ´ng tin phiáº¿u nháº­p hÃ ng`, userEmail);
+      await logPOAction(id, 'CHỈNH SỬA', `Chỉnh sửa thông tin phiếu nhập hàng`, userEmail);
 
       return res.json({ message: "Purchase order updated successfully" });
     } catch (error: any) {
@@ -577,81 +561,14 @@ purchaseOrdersRouter.delete("/purchase-orders/:id", requireAuth as any, async (r
     }
 
     if (existing.isRecorded) {
-      const items = await db.select().from(purchaseOrderItems).where(eq(purchaseOrderItems.poId, id));
-      
-      // Verification: Ensure enough stock exists BEFORE subtracting
-      for (const item of items) {
-        if (item.productId) {
-          const [product] = await db.select().from(products).where(eq(products.id, item.productId));
-          if (!product) {
-            return res.status(400).json({ error: `Sáº£n pháº©m vá»›i mÃ£ ${item.productCode} khÃ´ng tá»“n táº¡i trong kho.` });
-          }
-          if (product.quantity < item.quantity) {
-            return res.status(400).json({
-              error: `KhÃ´ng thá»ƒ xÃ³a (bá» ghi sá»•). Sáº£n pháº©m "${item.productName}" (MÃ£: ${item.productCode}) hiá»‡n chá»‰ cÃ²n tá»“n kho thá»±c táº¿: ${product.quantity}, khÃ´ng Ä‘á»§ Ä‘á»ƒ hoÃ n tráº£ (cáº§n giáº£m ${item.quantity}). Vui lÃ²ng kiá»ƒm tra láº¡i.`
-            });
-          }
-        }
-      }
-
-      for (const item of items) {
-        if (item.productId) {
-          const [product] = await db.select().from(products).where(eq(products.id, item.productId));
-          if (product) {
-            const newQty = product.quantity - item.quantity;
-            await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
-            
-            await db.delete(stockTransactions)
-              .where(
-                and(
-                  eq(stockTransactions.productId, item.productId),
-                  eq(stockTransactions.type, 'NHAP'),
-                  eq(stockTransactions.docNumber, existing.documentCode)
-                )
-              );
-          }
-        }
-      }
-    }
-
-    await db.update(purchaseOrders).set({ 
-      isDeleted: true, 
-      deletedAt: new Date(),
-      isRecorded: false 
-    }).where(eq(purchaseOrders.id, id));
-    
-    res.json({ message: "Purchase order moved to trash" });
-  } catch (error: any) {
-    console.error("DELETE /api/purchase-orders/:id failed:", error);
-    res.status(500).json({ error: "Failed to move purchase order to trash" });
-  }
-});
-
-purchaseOrdersRouter.post("/purchase-orders/:id/restore", requireAuth as any, async (req: any, res: any) => {
-  try {
-    const id = parseInt(req.params.id);
-    await db.update(purchaseOrders).set({ isDeleted: false, deletedAt: null }).where(eq(purchaseOrders.id, id));
-    res.json({ message: "Purchase order restored successfully" });
-  } catch (error: any) {
-    console.error("RESTORE /api/purchase-orders/:id failed:", error);
-    res.status(500).json({ error: "Failed to restore purchase order" });
-  }
-});
-
-purchaseOrdersRouter.delete("/purchase-orders/:id/permanent", requireAuth as any, async (req: any, res: any) => {
-  try {
-    const id = parseInt(req.params.id);
-    const [existing] = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, id));
-    
-    if (!existing) {
-      return res.status(404).json({ error: "Purchase order not found" });
+      return res.status(400).json({ error: "Phiếu nhập đã ghi sổ. Vui lòng bỏ ghi sổ trước khi xóa." });
     }
 
     await db.delete(purchaseOrders).where(eq(purchaseOrders.id, id));
-    res.json({ message: "Purchase order deleted permanently" });
+    res.json({ message: "Purchase order deleted successfully" });
   } catch (error: any) {
-    console.error("PERMANENT DELETE /api/purchase-orders/:id failed:", error);
-    res.status(500).json({ error: "Failed to permanently delete purchase order" });
+    console.error("DELETE /api/purchase-orders/:id failed:", error);
+    res.status(500).json({ error: "Failed to delete purchase order" });
   }
 });
 
@@ -694,7 +611,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/record", requireAuth as any, asy
       if (item.productId) {
         const [product] = await db.select().from(products).where(eq(products.id, item.productId));
         if (product) {
-          const newQty = product.quantity + item.quantity; // Nháº­p hÃ ng -> cá»™ng vÃ o kho tá»•ng
+          const newQty = product.quantity + item.quantity; // Nhập hàng -> cộng vào kho tổng
           await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
           
           let partnerName = null;
@@ -706,7 +623,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/record", requireAuth as any, asy
             productId: item.productId,
             type: 'NHAP',
             quantity: item.quantity,
-            note: `Ghi sá»• phiáº¿u nháº­p hÃ ng ${existing.poNumber} (${existing.documentCode})`,
+            note: `Ghi sổ phiếu nhập hàng ${existing.poNumber} (${existing.documentCode})`,
             userEmail,
             warehouseId: item.warehouseId || null,
             docNumber: existing.documentCode,
@@ -720,7 +637,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/record", requireAuth as any, asy
       }
     }
 
-    await logPOAction(id, 'GHI Sá»”', `Ghi sá»• phiáº¿u nháº­p hÃ ng, cá»™ng sá»‘ lÆ°á»£ng kho`, userEmail);
+    await logPOAction(id, 'GHI SỔ', `Ghi sổ phiếu nhập hàng, cộng số lượng kho`, userEmail);
 
     res.json({ message: "Purchase order recorded successfully" });
   } catch (error: any) {
@@ -743,6 +660,8 @@ purchaseOrdersRouter.post("/purchase-orders/:id/unrecord", requireAuth as any, a
       return res.status(400).json({ error: "Purchase order is not recorded yet" });
     }
 
+    await db.update(purchaseOrders).set({ isRecorded: false }).where(eq(purchaseOrders.id, id));
+
     const items = await db.select({
         id: purchaseOrderItems.id,
         poId: purchaseOrderItems.poId,
@@ -760,29 +679,12 @@ purchaseOrdersRouter.post("/purchase-orders/:id/unrecord", requireAuth as any, a
     .from(purchaseOrderItems)
     .leftJoin(products, eq(purchaseOrderItems.productId, products.id))
     .where(eq(purchaseOrderItems.poId, id));
-
-    // Verification: Ensure enough stock exists BEFORE subtracting
-    for (const item of items) {
-      if (item.productId) {
-        const [product] = await db.select().from(products).where(eq(products.id, item.productId));
-        if (!product) {
-          return res.status(400).json({ error: `Sáº£n pháº©m vá»›i mÃ£ ${item.productCode} khÃ´ng tá»“n táº¡i trong kho.` });
-        }
-        if (product.quantity < item.quantity) {
-          return res.status(400).json({
-            error: `KhÃ´ng thá»ƒ bá» ghi sá»•. Sáº£n pháº©m "${item.productName}" (MÃ£: ${item.productCode}) hiá»‡n chá»‰ cÃ²n tá»“n kho thá»±c táº¿: ${product.quantity}, khÃ´ng Ä‘á»§ Ä‘á»ƒ hoÃ n tráº£ (cáº§n giáº£m ${item.quantity}). Vui lÃ²ng kiá»ƒm tra láº¡i.`
-          });
-        }
-      }
-    }
-
-    await db.update(purchaseOrders).set({ isRecorded: false }).where(eq(purchaseOrders.id, id));
     
     for (const item of items) {
       if (item.productId) {
         const [product] = await db.select().from(products).where(eq(products.id, item.productId));
         if (product) {
-          const newQty = product.quantity - item.quantity; // Bá» ghi sá»• nháº­p hÃ ng -> trá»« khá»i kho tá»•ng
+          const newQty = product.quantity - item.quantity; // Bỏ ghi sổ nhập hàng -> trừ khỏi kho tổng
           await db.update(products).set({ quantity: newQty }).where(eq(products.id, item.productId));
           
           await db.delete(stockTransactions)
@@ -790,14 +692,14 @@ purchaseOrdersRouter.post("/purchase-orders/:id/unrecord", requireAuth as any, a
               and(
                 eq(stockTransactions.productId, item.productId),
                 eq(stockTransactions.type, 'NHAP'),
-                eq(stockTransactions.docNumber, existing.documentCode)
+                like(stockTransactions.note, `%${existing.documentCode}%`)
               )
             );
         }
       }
     }
 
-    await logPOAction(id, 'Bá»Ž GHI Sá»”', `Bá» ghi sá»• phiáº¿u nháº­p hÃ ng, hoÃ n láº¡i sá»‘ lÆ°á»£ng kho`, userEmail);
+    await logPOAction(id, 'BỎ GHI SỔ', `Bỏ ghi sổ phiếu nhập hàng, hoàn lại số lượng kho`, userEmail);
 
     res.json({ message: "Purchase order unrecorded successfully" });
   } catch (error: any) {
@@ -864,7 +766,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/duplicate", requireAuth as any, 
       });
     }
 
-    await logPOAction(newPO.id, 'NHÃ‚N Báº¢N', `NhÃ¢n báº£n tá»« phiáº¿u nháº­p hÃ ng #${existing.poNumber}`, userEmail);
+    await logPOAction(newPO.id, 'NHÂN BẢN', `Nhân bản từ phiếu nhập hàng #${existing.poNumber}`, userEmail);
 
     res.json(newPO);
   } catch (error: any) {
@@ -895,7 +797,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/deposit", requireAuth as any, as
       note,
     });
 
-    await logPOAction(id, 'THANH TOÃN', `ÄÃ£ thanh toÃ¡n: ${Number(amount).toLocaleString()}Ä‘ qua ${paymentMethod}. Ghi chÃº: ${note || 'khÃ´ng cÃ³'}.`, userEmail);
+    await logPOAction(id, 'THANH TOÁN', `Đã thanh toán: ${Number(amount).toLocaleString()}đ qua ${paymentMethod}. Ghi chú: ${note || 'không có'}.`, userEmail);
 
     res.json({ message: "Deposit added successfully" });
   } catch (error: any) {
@@ -926,7 +828,7 @@ purchaseOrdersRouter.post("/purchase-orders/:id/deposits", requireAuth as any, a
       note,
     });
 
-    await logPOAction(id, 'THANH TOÃN', `ÄÃ£ thanh toÃ¡n: ${Number(amount).toLocaleString()}Ä‘ qua ${paymentMethod}. Ghi chÃº: ${note || 'khÃ´ng cÃ³'}.`, userEmail);
+    await logPOAction(id, 'THANH TOÁN', `Đã thanh toán: ${Number(amount).toLocaleString()}đ qua ${paymentMethod}. Ghi chú: ${note || 'không có'}.`, userEmail);
 
     res.json({ message: "Deposit added successfully" });
   } catch (error: any) {
