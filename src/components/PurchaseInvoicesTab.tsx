@@ -407,6 +407,40 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     }
   };
 
+  useEffect(() => {
+    if (selectedPurchaseOrder) {
+      setQuickPoNumber(selectedPurchaseOrder.poNumber || '');
+    }
+  }, [selectedPurchaseOrder?.id, selectedPurchaseOrder?.poNumber]);
+
+  const handleSaveQuickPoNumber = async () => {
+    if (!selectedPurchaseOrder) return;
+    setSavingQuickNumber(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    try {
+      const res = await fetchWithAuth(`/api/purchase-orders/${selectedPurchaseOrder.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          poNumber: quickPoNumber
+        })
+      });
+      if (res.ok) {
+        setSelectedPurchaseOrder(prev => prev ? { ...prev, poNumber: quickPoNumber } : null);
+        loadPurchaseOrders();
+        setSuccessMsg("Cập nhật số phiếu nhập thành công!");
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || "Không thể cập nhật số phiếu nhập");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Lỗi khi cập nhật số phiếu nhập");
+    } finally {
+      setSavingQuickNumber(false);
+    }
+  };
+
   // Change payment status (Regenerates document code)
   const handleChangeStatus = async (id: number, newStatus: string) => {
     setErrorMsg('');
@@ -1016,14 +1050,62 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-[96vw] w-full my-4 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="font-display font-semibold text-slate-800 text-lg">
-                  {isEditing ? (isCreatingFromTemplate ? "Tạo Phiếu Nhập Mới" : "Chỉnh Sửa Phiếu Nhập") : "Hồ Sơ Phiếu Nhập Chi Tiết"}
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {isEditing 
-                    ? "Cập nhật vật tư, đơn giá, số lượng và đối tác trước khi ghi sổ" 
-                    : `Số: ${selectedPurchaseOrder?.poNumber} • Chứng từ: ${selectedPurchaseOrder?.documentCode}`}
-                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h3 className="font-display font-semibold text-slate-800 text-lg">
+                    {isEditing ? (isCreatingFromTemplate ? "Tạo Phiếu Nhập Mới" : "Chỉnh Sửa Phiếu Nhập") : "Hồ Sơ Phiếu Nhập Chi Tiết"}
+                  </h3>
+                  {!isEditing && selectedPurchaseOrder && (
+                    <div className="flex items-center gap-2">
+                      {selectedPurchaseOrder.depositEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAddDeposit(!showAddDeposit)}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
+                        >
+                          <Coins className="w-3.5 h-3.5 text-white" />
+                          <span>Thanh Toán Thêm</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePurchaseOrder(selectedPurchaseOrder.id)}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-white" />
+                        <span>Xóa Phiếu Nhập</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {!isEditing && selectedPurchaseOrder ? (
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="text-xs text-slate-600 font-bold">Số phiếu nhập:</span>
+                    <input
+                      type="text"
+                      value={quickPoNumber}
+                      onChange={(e) => setQuickPoNumber(e.target.value)}
+                      className="px-2 py-0.5 text-xs font-bold font-mono border border-slate-300 rounded bg-white text-slate-800 focus:border-indigo-500 focus:outline-none w-32"
+                      placeholder="Số PN..."
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveQuickPoNumber}
+                      disabled={savingQuickNumber || quickPoNumber === selectedPurchaseOrder.poNumber}
+                      className="px-2.5 py-1 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed rounded transition-colors shadow-2xs"
+                    >
+                      {savingQuickNumber ? "Đang lưu..." : "Lưu số PN"}
+                    </button>
+                    <span className="text-xs text-slate-500 font-mono ml-1">
+                      • Chứng từ: {selectedPurchaseOrder.documentCode}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {isEditing 
+                      ? "Cập nhật vật tư, đơn giá, số lượng và đối tác trước khi ghi sổ" 
+                      : `Số: ${selectedPurchaseOrder?.poNumber} • Chứng từ: ${selectedPurchaseOrder?.documentCode}`}
+                  </p>
+                )}
               </div>
               <button 
                 onClick={() => {
@@ -1032,7 +1114,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                   setIsEditing(false);
                   setIsCreatingFromTemplate(false);
                 }} 
-                className="text-slate-400 hover:text-slate-600 text-xl"
+                className="text-slate-400 hover:text-slate-600 text-xl font-bold p-1 hover:bg-slate-200 rounded-lg w-8 h-8 flex items-center justify-center transition-colors"
               >
                 ×
               </button>
@@ -1983,6 +2065,28 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                 {/* Operations & Interactive Elements in the modal */}
                 <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 flex flex-wrap gap-3 items-center justify-between">
                   
+                  {/* Quick Edit PO Number */}
+                  <div className="space-y-1">
+                    <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Sửa Số PN Trực Tiếp</span>
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg p-1">
+                      <input
+                        type="text"
+                        value={quickPoNumber}
+                        onChange={(e) => setQuickPoNumber(e.target.value)}
+                        className="px-2 py-1 text-xs font-bold font-mono text-slate-800 outline-none w-28 bg-transparent"
+                        placeholder="Số PN..."
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveQuickPoNumber}
+                        disabled={savingQuickNumber || quickPoNumber === selectedPurchaseOrder.poNumber}
+                        className="px-2.5 py-1 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed rounded transition-colors shrink-0"
+                      >
+                        {savingQuickNumber ? "..." : "Lưu"}
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Status Toggle buttons inside view */}
                   <div className="space-y-1">
                     <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Cập nhật nhanh phương thức thanh toán</span>
@@ -2008,7 +2112,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                     </div>
                   </div>
 
-                                 {selectedPurchaseOrder.status.startsWith('CK') && (
+                  {selectedPurchaseOrder.status.startsWith('CK') && (
                     <div className="flex gap-2 items-center mb-4 p-2 bg-blue-50/50 rounded-lg border border-blue-100 w-[385px]">
                       <span className="text-[10px] font-bold text-slate-500 uppercase">Tài khoản nhận:</span>
                       <select
@@ -2028,19 +2132,24 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                     </div>
                   )}
 
-                  <div className="flex gap-2">
-                    
-                    {/* Add Deposit toggle */}
-                    {selectedPurchaseOrder.depositEnabled && (
+                  <div className="flex flex-wrap gap-2 w-full lg:w-auto lg:flex-1 lg:justify-end mt-4 lg:mt-0 items-center">
+                    {selectedPurchaseOrder.isRecorded ? (
                       <button
-                        onClick={() => setShowAddDeposit(!showAddDeposit)}
-                        className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
+                        onClick={() => handleUnrecordPurchaseOrder(selectedPurchaseOrder.id)}
+                        className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                       >
-                        <Coins className="w-4 h-4 text-emerald-600" />
-                        <span>Thanh Toán Thêm</span>
+                        <CheckCircle2 className="w-4 h-4 text-amber-600" />
+                        <span>Bỏ Ghi Sổ</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleRecordPurchaseOrder(selectedPurchaseOrder.id)}
+                        className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-white" />
+                        <span>Ghi Sổ Phiếu Nhập</span>
                       </button>
                     )}
-
                     {!selectedPurchaseOrder.isRecorded && (
                       <button
                         onClick={startEditing}
@@ -2065,18 +2174,10 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                                         <span>Xuất Excel</span>
+                      <span>Xuất Excel</span>
                     </button>
 
-                    <div className="flex-1 min-w-[20px]"></div>
-                    <div className="w-px h-8 bg-slate-300 mx-1 hidden lg:block"></div>
-                    <button
-                      onClick={() => handleDeletePurchaseOrder(selectedPurchaseOrder.id)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors lg:ml-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Xóa Phiếu Nhập</span>
-                    </button>
+                    
                   </div>
 
                 </div>
@@ -2129,7 +2230,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
 
                       <div>
                         <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Ghi chú thanh toán</label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 w-full lg:w-auto lg:flex-1 lg:justify-end mt-4 lg:mt-0 items-center">
                           <input
                             type="text"
                             placeholder="Thanh toán đợt 2..."
@@ -2323,4 +2424,3 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     </div>
   );
 };
-
