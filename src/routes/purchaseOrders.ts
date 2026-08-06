@@ -1193,4 +1193,3 @@ purchaseOrdersRouter.post("/purchase-orders/:id/deposits", requireAuth as any, a
   
     res.status(500).json({ error: "Failed to add deposit" });
   }
-});
