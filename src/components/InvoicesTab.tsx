@@ -114,7 +114,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
         setTotalAmountSum(data.totalAmountSum || 0);
         setTotalInvoicesCount(data.total || 0);
       } else {
-        throw new Error("KhÃ´ng thá»ƒ táº£i danh sÃ¡ch thá»‘ng kÃª hÃ³a Ä‘Æ¡n");
+        throw new Error("Không thể tải danh sách thống kê hóa đơn");
       }
     } catch (err: any) {
       if (fetchId !== currentFetchId.current) return;
@@ -296,7 +296,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Lá»—i khi táº¡o má»›i khÃ¡ch hÃ ng");
+        throw new Error(errorData.error || "Lỗi khi tạo mới khách hàng");
       }
 
       const createdCustomer = await res.json();
@@ -349,14 +349,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
       });
 
       if (res.ok) {
-        setSuccessMsg('Táº¡o hÃ³a Ä‘Æ¡n má»›i tá»« máº«u thÃ nh cÃ´ng!');
+        setSuccessMsg('Tạo hóa đơn mới từ mẫu thành công!');
         setIsEditing(false);
         setIsCreatingFromTemplate(false);
         loadInvoices();
         onInvoiceModified();
       } else {
         const errData = await res.json();
-        throw new Error(errData.error || "Táº¡o hÃ³a Ä‘Æ¡n tháº¥t báº¡i");
+        throw new Error(errData.error || "Tạo hóa đơn thất bại");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -374,13 +374,13 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
     
     if (!selectedInvoice) return;
     if (editItems.length === 0) {
-      alert("HÃ³a Ä‘Æ¡n pháº£i cÃ³ Ã­t nháº¥t má»™t váº­t tÆ°.");
+      alert("Hóa đơn phải có ít nhất một vật tư.");
       return;
     }
 
     const hasInvalidQty = editItems.some(itm => itm.quantity <= 0);
     if (hasInvalidQty) {
-      alert("Sá»‘ lÆ°á»£ng cá»§a má»—i váº­t tÆ° pháº£i lá»›n hÆ¡n 0.");
+      alert("Số lượng của mỗi vật tư phải lớn hơn 0.");
       return;
     }
 
@@ -421,14 +421,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
       });
 
       if (res.ok) {
-        setSuccessMsg("Cáº­p nháº­t hÃ³a Ä‘Æ¡n thÃ nh cÃ´ng!");
+        setSuccessMsg("Cập nhật hóa đơn thành công!");
         setIsEditing(false);
         loadInvoices();
         viewInvoiceDetail(selectedInvoice.id);
         onInvoiceModified();
       } else {
         const data = await res.json();
-        throw new Error(data.error || "KhÃ´ng thá»ƒ cáº­p nháº­t hÃ³a Ä‘Æ¡n");
+        throw new Error(data.error || "Không thể cập nhật hóa đơn");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -447,7 +447,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
         const data = await res.json();
         setSelectedInvoice(data);
       } else {
-        throw new Error("KhÃ´ng thá»ƒ láº¥y chi tiáº¿t hÃ³a Ä‘Æ¡n");
+        throw new Error("Không thể lấy chi tiết hóa đơn");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -468,7 +468,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
       });
 
       if (res.ok) {
-        setSuccessMsg("Cáº­p nháº­t tráº¡ng thÃ¡i vÃ  tá»± Ä‘á»™ng thay Ä‘á»•i mÃ£ chá»©ng tá»« thÃ nh cÃ´ng!");
+        setSuccessMsg("Cập nhật trạng thái và tự động thay đổi mã chứng từ thành công!");
         loadInvoices();
         if (showDetailModal && selectedInvoice?.id === id) {
           viewInvoiceDetail(id); // Reload modal details
@@ -476,14 +476,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
         onInvoiceModified();
       } else {
         const data = await res.json();
-        throw new Error(data.error || "KhÃ´ng thá»ƒ cáº­p nháº­t tráº¡ng thÃ¡i");
+        throw new Error(data.error || "Không thể cập nhật trạng thái");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
     }
   };
 
-  // Record/Ghi sá»• invoice
+  // Record/Ghi sổ invoice
   const handleRecordInvoice = async (id: number) => {
     setErrorMsg('');
     setSuccessMsg('');
@@ -494,11 +494,11 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || "Ghi sá»• tháº¥t báº¡i");
+        throw new Error(errData.error || "Ghi sổ thất bại");
       }
 
       const result = await res.json();
-      setSuccessMsg(result.message || "Ghi sá»• thÃ nh cÃ´ng!");
+      setSuccessMsg(result.message || "Ghi sổ thành công!");
       loadInvoices();
       if (showDetailModal && selectedInvoice?.id === id) {
         viewInvoiceDetail(id);
@@ -509,11 +509,11 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
     }
   };
 
-  // Unrecord/Bá» ghi sá»• invoice
+  // Unrecord/Bỏ ghi sổ invoice
   const handleUnrecordInvoice = async (id: number) => {
     setConfirmDialog({
       isOpen: true,
-      message: "Bá» ghi sá»• sáº½ hoÃ n tráº£ láº¡i váº­t tÆ° vÃ o kho vÃ  chuyá»ƒn hÃ³a Ä‘Æ¡n vá» tráº¡ng thÃ¡i chá». Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n bá» ghi sá»•?",
+      message: "Bỏ ghi sổ sẽ hoàn trả lại vật tư vào kho và chuyển hóa đơn về trạng thái chờ. Bạn có chắc chắn muốn bỏ ghi sổ?",
       onConfirm: async () => {
         setConfirmDialog(null);
         setErrorMsg('');
@@ -525,11 +525,11 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
 
           if (!res.ok) {
             const errData = await res.json();
-            throw new Error(errData.error || "Bá» ghi sá»• tháº¥t báº¡i");
+            throw new Error(errData.error || "Bỏ ghi sổ thất bại");
           }
 
           const result = await res.json();
-          setSuccessMsg(result.message || "Bá» ghi sá»• thÃ nh cÃ´ng!");
+          setSuccessMsg(result.message || "Bỏ ghi sổ thành công!");
           loadInvoices();
           if (showDetailModal && selectedInvoice?.id === id) {
             viewInvoiceDetail(id);
@@ -542,7 +542,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
     });
   };
 
-  // Duplicate Invoice (NhÃ¢n báº£n)
+  // Duplicate Invoice (Nhân bản)
   const handleDuplicateInvoice = async (id: number) => {
     setErrorMsg('');
     setSuccessMsg('');
@@ -553,12 +553,12 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
 
       if (res.ok) {
         const result = await res.json();
-        setSuccessMsg(`NhÃ¢n báº£n hÃ³a Ä‘Æ¡n nhÃ¡p thÃ nh cÃ´ng! ÄÆ¡n má»›i #${result.invoiceNumber} Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o Trang Chá».`);
+        setSuccessMsg(`Nhân bản hóa đơn nháp thành công! Đơn mới #${result.invoiceNumber} đã được thêm vào Trang Chờ.`);
         loadInvoices();
         onInvoiceModified();
       } else {
         const errData = await res.json();
-        throw new Error(errData.error || "NhÃ¢n báº£n tháº¥t báº¡i");
+        throw new Error(errData.error || "Nhân bản thất bại");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -625,7 +625,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
   const handleDeleteInvoice = async (id: number) => {
     setConfirmDialog({
       isOpen: true,
-      message: "Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n chuyá»ƒn hÃ³a Ä‘Æ¡n nÃ y vÃ o thÃ¹ng rÃ¡c?",
+      message: "Bạn có chắc chắn muốn xóa hóa đơn này? Hành động này không thể hoàn tác.",
       onConfirm: async () => {
         setConfirmDialog(null);
         setErrorMsg('');
@@ -636,13 +636,13 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
           });
 
           if (res.ok) {
-            setSuccessMsg("ÄÃ£ chuyá»ƒn hÃ³a Ä‘Æ¡n vÃ o thÃ¹ng rÃ¡c!");
+            setSuccessMsg("Đã xóa hóa đơn thành công!");
             setShowDetailModal(false);
             loadInvoices();
             onInvoiceModified();
           } else {
             const errData = await res.json();
-            throw new Error(errData.error || "XÃ³a hÃ³a Ä‘Æ¡n tháº¥t báº¡i");
+            throw new Error(errData.error || "Xóa hóa đơn thất bại");
           }
         } catch (err: any) {
           setErrorMsg(err.message);
@@ -670,14 +670,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
       });
 
       if (res.ok) {
-        setSuccessMsg(`ÄÃ£ nháº­n cá»c thÃªm ${formatVND(depositAmount)} Ä‘ thÃ nh cÃ´ng!`);
+        setSuccessMsg(`Đã nhận cọc thêm ${formatVND(depositAmount)} đ thành công!`);
         setShowAddDeposit(false);
         setDepositAmount(0);
         setDepositNote('');
         viewInvoiceDetail(selectedInvoice.id); // reload
       } else {
         const errData = await res.json();
-        throw new Error(errData.error || "Ghi nháº­n cá»c tháº¥t báº¡i");
+        throw new Error(errData.error || "Ghi nhận cọc thất bại");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -687,13 +687,13 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
   // Helper for status styling
   const getStatusBadge = (status: string) => {
     if (status === 'CTT') {
-      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-red-700 border border-red-200">CHÆ¯A THANH TOÃN</span>;
+      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-red-700 border border-red-200">CHƯA THANH TOÁN</span>;
     }
     if (status === 'TM') {
-      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">TIá»€N Máº¶T</span>;
+      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">TIỀN MẶT</span>;
     }
     if (status === 'CK' || (status && status.startsWith('CK'))) {
-      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-700 border border-blue-200">CHUYá»‚N KHOáº¢N</span>;
+      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-700 border border-blue-200">CHUYỂN KHOẢN</span>;
     }
     return null;
   };
@@ -712,7 +712,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
       printWindow.document.write(`
         <html>
           <head>
-            <title>In hÃ³a Ä‘Æ¡n</title>
+            <title>In hóa đơn</title>
             <style>
               body { font-family: sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
               .font-mono { font-family: monospace; }
@@ -750,8 +750,8 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
       
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="font-display text-base font-bold tracking-tight text-slate-900">Sá»• Thá»‘ng KÃª HÃ³a ÄÆ¡n</h1>
-          <p className="text-xs text-slate-500">Xem bÃ¡o cÃ¡o, sao chÃ©p, in áº¥n vÃ  quáº£n lÃ½ tráº¡ng thÃ¡i xuáº¥t kho ghi sá»•</p>
+          <h1 className="font-display text-base font-bold tracking-tight text-slate-900">Sổ Thống Kê Hóa Đơn</h1>
+          <p className="text-xs text-slate-500">Xem báo cáo, sao chép, in ấn và quản lý trạng thái xuất kho ghi sổ</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -761,7 +761,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                 const res = await fetchWithAuth('/api/invoices/create-blank', {
                   method: 'POST',
                 });
-                if (!res.ok) throw new Error("KhÃ´ng thá»ƒ táº¡o hÃ³a Ä‘Æ¡n má»›i");
+                if (!res.ok) throw new Error("Không thể tạo hóa đơn mới");
                 loadInvoices(); // Assuming this is the function to reload invoices
               } catch (err: any) {
                 setErrorMsg(err.message);
@@ -772,7 +772,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
             className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-md hover:bg-emerald-700 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            Táº¡o HÃ³a ÄÆ¡n Tráº¯ng
+            Tạo Hóa Đơn Trắng
           </button>
         </div>
       </div>
@@ -807,7 +807,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
           <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
-            placeholder="TÃ¬m theo mÃ£ chá»©ng tá»«, sá»‘ hÃ³a Ä‘Æ¡n, khÃ¡ch hÃ ng..."
+            placeholder="Tìm theo mã chứng từ, số hóa đơn, khách hàng..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -824,7 +824,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
             style={{ width: '304.281px' }}
             className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5"
           >
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Tá»«</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Từ</span>
             <input
               type="date"
               value={filterStartDate}
@@ -834,7 +834,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
               }}
               className="px-1.5 py-0.5 text-xs text-slate-700 bg-transparent border-0 focus:outline-none"
             />
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Äáº¿n</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Đến</span>
             <input
               type="date"
               value={filterEndDate}
@@ -855,10 +855,10 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
             style={{ width: '169px' }}
             className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-md focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">-- Tráº¡ng thÃ¡i thanh toÃ¡n --</option>
-            <option value="CTT">ChÆ°a thanh toÃ¡n</option>
-            <option value="TM">Tiá»n máº·t</option>
-            <option value="CK">Chuyá»ƒn khoáº£n</option>
+            <option value="">-- Trạng thái thanh toán --</option>
+            <option value="CTT">Chưa thanh toán</option>
+            <option value="TM">Tiền mặt</option>
+            <option value="CK">Chuyển khoản</option>
           </select>
 
           <select
@@ -870,9 +870,9 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
             style={{ width: '162px' }}
             className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-md focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">-- Tráº¡ng thÃ¡i ghi sá»• --</option>
-            <option value="true">ÄÃ£ ghi sá»• (Trá»« kho)</option>
-            <option value="false">ChÆ°a ghi sá»• (Trang chá»)</option>
+            <option value="">-- Trạng thái ghi sổ --</option>
+            <option value="true">Đã ghi sổ (Trừ kho)</option>
+            <option value="false">Chưa ghi sổ (Trang chờ)</option>
           </select>
           <select
             value={sortOrder}
@@ -883,8 +883,8 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
             style={{ width: '150px' }}
             className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-md focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="desc">Má»›i nháº¥t tá»›i cÅ© nháº¥t</option>
-            <option value="asc">CÅ© nháº¥t tá»›i má»›i nháº¥t</option>
+            <option value="desc">Mới nhất tới cũ nhất</option>
+            <option value="asc">Cũ nhất tới mới nhất</option>
           </select>
 
           {(filterStatus || filterRecorded || searchTerm || filterStartDate || filterEndDate) && (
@@ -900,7 +900,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
               className="px-2.5 py-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover:underline cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" />
-              <span>Reset bá»™ lá»c</span>
+              <span>Reset bộ lọc</span>
             </button>
           )}
         </div>
@@ -912,14 +912,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                <th className="px-3 py-2.5">TÃªn KhÃ¡ch</th>
-                <th className="px-3 py-2.5">MÃ£ sá»‘ thuáº¿</th>
-                <th className="px-3 py-2.5">Sá»‘ chá»©ng tá»«</th>
-                <th className="px-3 py-2.5">Sá»‘ HÃ³a Ä‘Æ¡n</th>
-                <th className="px-3 py-2.5">NgÃ y</th>
-                <th className="px-3 py-2.5 text-right">ThÃ nh tiá»n</th>
-                <th className="px-3 py-2.5">Tráº¡ng thÃ¡i</th>
-                <th className="px-3 py-2.5 text-center">Chá»©c NÄƒng</th>
+                <th className="px-3 py-2.5">Tên Khách</th>
+                <th className="px-3 py-2.5">Mã số thuế</th>
+                <th className="px-3 py-2.5">Số chứng từ</th>
+                <th className="px-3 py-2.5">Số Hóa đơn</th>
+                <th className="px-3 py-2.5">Ngày</th>
+                <th className="px-3 py-2.5 text-right">Thành tiền</th>
+                <th className="px-3 py-2.5">Trạng thái</th>
+                <th className="px-3 py-2.5 text-center">Chức Năng</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
@@ -927,13 +927,13 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                 <tr>
                   <td colSpan={8} className="px-3 py-8 text-center text-slate-400">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-1.5 text-indigo-500" />
-                    <span className="text-xs font-semibold">Äang táº£i danh sÃ¡ch hÃ³a Ä‘Æ¡n...</span>
+                    <span className="text-xs font-semibold">Đang tải danh sách hóa đơn...</span>
                   </td>
                 </tr>
               ) : invoiceList.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-3 py-8 text-center text-slate-400 font-semibold">
-                    KhÃ´ng tÃ¬m tháº¥y hÃ³a Ä‘Æ¡n nÃ o trong cÆ¡ sá»Ÿ dá»¯ liá»‡u.
+                    Không tìm thấy hóa đơn nào trong cơ sở dữ liệu.
                   </td>
                 </tr>
               ) : (
@@ -946,10 +946,10 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                   >
                     <td className="px-3 py-2.5 font-semibold text-slate-900">
                       <div>
-                        {inv.customerName || 'KhÃ¡ch vÃ£ng lai'}
+                        {inv.customerName || 'Khách vãng lai'}
                       </div>
                       {inv.customerPhone && (
-                        <div className="text-[10px] text-slate-400 font-mono">SÄT: {inv.customerPhone}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">SĐT: {inv.customerPhone}</div>
                       )}
                     </td>
                     <td className="px-3 py-2.5 font-mono text-slate-500">
@@ -965,7 +965,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       {inv.createdAt ? new Date(inv.createdAt).toLocaleString('vi-VN') : ''}
                     </td>
                     <td className="px-3 py-2.5 text-right font-mono font-black text-indigo-600">
-                      {formatVND(inv.depositEnabled ? Number(inv.totalAmount || 0) - Number(inv.totalDeposits || 0) : Number(inv.totalAmount || 0))} Ä‘
+                      {formatVND(inv.depositEnabled ? Number(inv.totalAmount || 0) - Number(inv.totalDeposits || 0) : Number(inv.totalAmount || 0))} đ
                     </td>
                     <td className="px-3 py-2.5 space-y-1">
                       <div className="flex flex-wrap items-center gap-1">
@@ -977,7 +977,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         <button
                           onClick={() => viewInvoiceDetail(inv.id)}
                           className="p-1 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors flex items-center gap-0.5 text-[11px] font-bold cursor-pointer"
-                          title="Xem chi tiáº¿t & logs"
+                          title="Xem chi tiết & logs"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Xem</span>
@@ -986,10 +986,10 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         <button
                           onClick={() => handleDuplicateInvoice(inv.id)}
                           className="p-1 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors flex items-center gap-0.5 text-[11px] font-bold cursor-pointer"
-                          title="NhÃ¢n báº£n hÃ³a Ä‘Æ¡n nÃ y"
+                          title="Nhân bản hóa đơn này"
                         >
                           <Copy className="w-3.5 h-3.5" />
-                          <span>NhÃ¢n báº£n</span>
+                          <span>Nhân bản</span>
                         </button>
 
                         {/* Toggle Recording (Post/Unpost) */}
@@ -997,17 +997,17 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                           <button
                             onClick={() => handleUnrecordInvoice(inv.id)}
                             className="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 text-[11px] font-bold rounded border border-amber-200 transition-colors cursor-pointer"
-                            title="Bá» ghi sá»• hoÃ n tráº£ láº¡i hÃ ng vÃ o kho"
+                            title="Bỏ ghi sổ hoàn trả lại hàng vào kho"
                           >
-                            Bá» Ghi Sá»•
+                            Bỏ Ghi Sổ
                           </button>
                         ) : (
                           <button
                             onClick={() => handleRecordInvoice(inv.id)}
                             className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded transition-colors cursor-pointer"
-                            title="Ghi sá»• trá»« kho thiáº¿t bá»‹"
+                            title="Ghi sổ trừ kho thiết bị"
                           >
-                            Ghi Sá»•
+                            Ghi Sổ
                           </button>
                         )}
                       </div>
@@ -1021,7 +1021,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                 <td colSpan={5} className="px-3 py-3 text-left">
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-indigo-700 font-bold uppercase tracking-wider text-[10px]">Tá»•ng sá»‘ phiáº¿u Ä‘Ã£ lá»c:</span>
+                      <span className="text-indigo-700 font-bold uppercase tracking-wider text-[10px]">Tổng số phiếu đã lọc:</span>
                       <span className="font-mono font-black text-indigo-700 text-xs">{totalInvoicesCount}</span>
                     </div>
                   </div>
@@ -1029,8 +1029,8 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                 <td className="px-3 py-3 text-right">
                   <div className="flex flex-col items-end gap-1.5">
                     <div className="bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-100 flex flex-col items-end shrink-0">
-                      <span className="text-indigo-700 font-bold uppercase tracking-wider text-[9px] whitespace-nowrap">Tá»•ng tiá»n Ä‘Æ°á»£c lá»c:</span>
-                      <span className="font-mono font-black text-indigo-700 text-sm whitespace-nowrap">{formatVND(totalAmountSum)} Ä‘</span>
+                      <span className="text-indigo-700 font-bold uppercase tracking-wider text-[9px] whitespace-nowrap">Tổng tiền được lọc:</span>
+                      <span className="font-mono font-black text-indigo-700 text-sm whitespace-nowrap">{formatVND(totalAmountSum)} đ</span>
                     </div>
                   </div>
                 </td>
@@ -1073,12 +1073,12 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
             <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="font-display font-semibold text-slate-800 text-lg">
-                  {isEditing ? (isCreatingFromTemplate ? "Táº¡o HÃ³a ÄÆ¡n Má»›i" : "Chá»‰nh Sá»­a HÃ³a ÄÆ¡n") : "Há»“ SÆ¡ HÃ³a ÄÆ¡n Chi Tiáº¿t"}
+                  {isEditing ? (isCreatingFromTemplate ? "Tạo Hóa Đơn Mới" : "Chỉnh Sửa Hóa Đơn") : "Hồ Sơ Hóa Đơn Chi Tiết"}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {isEditing 
-                    ? "Cáº­p nháº­t váº­t tÆ°, Ä‘Æ¡n giÃ¡, sá»‘ lÆ°á»£ng vÃ  Ä‘á»‘i tÃ¡c trÆ°á»›c khi ghi sá»•" 
-                    : `Sá»‘: ${selectedInvoice?.invoiceNumber} â€¢ Chá»©ng tá»«: ${selectedInvoice?.documentCode}`}
+                    ? "Cập nhật vật tư, đơn giá, số lượng và đối tác trước khi ghi sổ" 
+                    : `Số: ${selectedInvoice?.invoiceNumber} • Chứng từ: ${selectedInvoice?.documentCode}`}
                 </p>
               </div>
               <button 
@@ -1090,14 +1090,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                 }} 
                 className="text-slate-400 hover:text-slate-600 text-xl"
               >
-                Ã—
+                ×
               </button>
             </div>
 
             {detailLoading ? (
               <div className="p-12 text-center text-slate-400">
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-500" />
-                <span>Äang táº£i thÃ´ng tin...</span>
+                <span>Đang tải thông tin...</span>
               </div>
             ) : isEditing ? (
               <div className="p-6 max-h-[85vh] overflow-y-auto">
@@ -1113,13 +1113,13 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Basic Invoice fields */}
                     <div className="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">ThÃ´ng Tin Chung</h4>
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Thông Tin Chung</h4>
                       
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Sá»‘ hÃ³a Ä‘Æ¡n</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Số hóa đơn</label>
                         <input
                           type="text"
-                          placeholder="Äá»ƒ trá»‘ng sáº½ máº·c Ä‘á»‹nh lÃ  0"
+                          placeholder="Để trống sẽ mặc định là 0"
                           value={editInvoiceNumber}
                           onChange={(e) => setEditInvoiceNumber(e.target.value)}
                           className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-semibold"
@@ -1127,7 +1127,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       </div>
 
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">NgÃ y táº¡o hÃ³a Ä‘Æ¡n</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Ngày tạo hóa đơn</label>
                         <input
                           type="datetime-local"
                           value={editCreatedAt}
@@ -1137,27 +1137,27 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       </div>
 
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">HÃ¬nh thá»©c thanh toÃ¡n</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Hình thức thanh toán</label>
                         <select
                           value={editStatus}
                           onChange={(e: any) => setEditStatus(e.target.value)}
                           className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-semibold"
                         >
-                          <option value="CTT">ChÆ°a thanh toÃ¡n</option>
-                          <option value="TM">Tiá»n máº·t</option>
-                          <option value="CK">Chuyá»ƒn khoáº£n</option>
+                          <option value="CTT">Chưa thanh toán</option>
+                          <option value="TM">Tiền mặt</option>
+                          <option value="CK">Chuyển khoản</option>
                         </select>
                       </div>
 
                       {editStatus === 'CK' && (
                         <div>
-                          <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">TÃ i khoáº£n nháº­n</label>
+                          <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Tài khoản nhận</label>
                           <select
                             value={editBankAccountId}
                             onChange={(e) => setEditBankAccountId(e.target.value)}
                             className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-semibold"
                           >
-                            <option value="">-- Chá»n tÃ i khoáº£n --</option>
+                            <option value="">-- Chọn tài khoản --</option>
                             {bankAccounts.map(b => (
                               <option key={b.id} value={b.id}>
                                 {b.bankName} - {b.accountNumber} ({b.accountName})
@@ -1176,18 +1176,18 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                           className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded animate-none"
                         />
                         <label htmlFor="edit_deposit_enabled" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                          KÃ­ch hoáº¡t thanh toÃ¡n nhiá»u láº§n
+                          Kích hoạt thanh toán nhiều lần
                         </label>
                       </div>
                     </div>
 
                     {/* Customer search field */}
                     <div className="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 relative">
-                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">KhÃ¡ch HÃ ng / Äá»‘i TÃ¡c</h4>
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Khách Hàng / Đối Tác</h4>
                       
                       <div className="relative">
                         <div className="flex justify-between items-center mb-1">
-                          <label className="block text-[10px] text-slate-500 font-semibold uppercase">TÃ¬m kiáº¿m khÃ¡ch hÃ ng</label>
+                          <label className="block text-[10px] text-slate-500 font-semibold uppercase">Tìm kiếm khách hàng</label>
                           <button
                             type="button"
                             onClick={() => {
@@ -1196,14 +1196,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                             }}
                             className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
                           >
-                            <UserPlus className="w-2.5 h-2.5" /> ThÃªm má»›i
+                            <UserPlus className="w-2.5 h-2.5" /> Thêm mới
                           </button>
                         </div>
                         <div className="relative">
                           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                           <input
                             type="text"
-                            placeholder="Nháº­p tÃªn, sá»‘ Ä‘iá»‡n thoáº¡i hoáº·c MST..."
+                            placeholder="Nhập tên, số điện thoại hoặc MST..."
                             value={customerSearch}
                             onChange={(e) => {
                               setCustomerSearch(e.target.value);
@@ -1218,7 +1218,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                               onClick={handleClearCustomer}
                               className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-sm font-bold"
                             >
-                              Ã—
+                              ×
                             </button>
                           )}
                         </div>
@@ -1236,18 +1236,18 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                   }}
                                   className="p-2 text-xs text-indigo-600 hover:bg-indigo-50 cursor-pointer font-bold flex items-center gap-1 border-b border-indigo-50"
                                 >
-                                  <Plus className="w-3.5 h-3.5" /> + Táº¡o má»›i: "{customerSearch}"
+                                  <Plus className="w-3.5 h-3.5" /> + Tạo mới: "{customerSearch}"
                                 </div>
                               )}
                               <div 
                                 onClick={() => {
                                   setEditCustomer(null);
-                                  setCustomerSearch('KhÃ¡ch hÃ ng vÃ£ng lai');
+                                  setCustomerSearch('Khách hàng vãng lai');
                                   setShowCustomerDropdown(false);
                                 }}
                                 className="p-2 text-xs text-slate-500 hover:bg-indigo-50 cursor-pointer font-semibold"
                               >
-                                -- KhÃ¡ch hÃ ng vÃ£ng lai --
+                                -- Khách hàng vãng lai --
                               </div>
                               {filteredCustomers.map((cust) => (
                                 <div
@@ -1264,7 +1264,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                 </div>
                               ))}
                               {filteredCustomers.length === 0 && (
-                                <div className="p-2 text-xs text-slate-400 italic">KhÃ´ng tÃ¬m tháº¥y khÃ¡ch hÃ ng nÃ o.</div>
+                                <div className="p-2 text-xs text-slate-400 italic">Không tìm thấy khách hàng nào.</div>
                               )}
                             </div>
                           </>
@@ -1274,8 +1274,8 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       {editCustomer && (
                         <div className="p-2.5 bg-white rounded border text-xs space-y-1">
                           <div className="font-bold text-slate-800">{editCustomer.name}</div>
-                          {editCustomer.phone && <div className="text-slate-500 font-mono">SÄT: {editCustomer.phone}</div>}
-                          {editCustomer.address && <div className="text-slate-400 text-[11px] leading-tight">ÄC: {editCustomer.address}</div>}
+                          {editCustomer.phone && <div className="text-slate-500 font-mono">SĐT: {editCustomer.phone}</div>}
+                          {editCustomer.address && <div className="text-slate-400 text-[11px] leading-tight">ĐC: {editCustomer.address}</div>}
                         </div>
                       )}
                     </div>
@@ -1283,17 +1283,17 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
 
                   {/* Product Search & Items List */}
                   <div className="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Danh SÃ¡ch Thiáº¿t Bá»‹ / Váº­t TÆ°</h4>
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Danh Sách Thiết Bị / Vật Tư</h4>
 
                     {/* Product Autocomplete Input */}
                     <div className="relative">
                       <div className="flex gap-2 mb-1">
                         <div className="flex-1">
-                          <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">ThÃªm thiáº¿t bá»‹ vÃ o hÃ³a Ä‘Æ¡n</label>
+                          <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Thêm thiết bị vào hóa đơn</label>
                         </div>
                         <div className="w-1/3">
                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Chá»n Kho (Báº¯t buá»™c)
+                            Chọn Kho (Bắt buộc)
                           </label>
                         </div>
                       </div>
@@ -1303,7 +1303,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                           <input
                             type="text"
-                            placeholder={selectedWarehouseId ? "TÃ¬m theo tÃªn váº­t tÆ°, mÃ£ thiáº¿t bá»‹, danh má»¥c..." : "Vui lÃ²ng chá»n kho trÆ°á»›c Ä‘á»ƒ tÃ¬m kiáº¿m..."}
+                            placeholder={selectedWarehouseId ? "Tìm theo tên vật tư, mã thiết bị, danh mục..." : "Vui lòng chọn kho trước để tìm kiếm..."}
                             value={productSearch}
                             onChange={(e) => {
                               setProductSearch(e.target.value);
@@ -1322,7 +1322,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                             onChange={(e) => setSelectedWarehouseId(e.target.value ? Number(e.target.value) : null)}
                             className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold text-slate-800"
                           >
-                            <option value="">-- Chá»n Kho --</option>
+                            <option value="">-- Chọn Kho --</option>
                             {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                           </select>
                         </div>
@@ -1344,15 +1344,15 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                               >
                                 <div>
                                   <div className="font-normal text-[#373737] text-[11px]">{prod.name}</div>
-                                  <div className="text-[12px] text-black font-mono">MÃ£: {prod.code} | Kho: {prod.warehouseName} | Tá»“n: {formatQuantity(prod.quantity)} {prod.unit || 'chiáº¿c'}</div>
+                                  <div className="text-[12px] text-black font-mono">Mã: {prod.code} | Kho: {prod.warehouseName} | Tồn: {formatQuantity(prod.quantity)} {prod.unit || 'chiếc'}</div>
                                 </div>
                                 <span className="text-indigo-600 font-mono text-xs font-bold">
-                                  {formatVND(prod.price)} Ä‘
+                                  {formatVND(prod.price)} đ
                                 </span>
                               </div>
                             )})}
                             {filteredProducts.length === 0 && (
-                              <div className="p-2 text-xs text-slate-400 italic">KhÃ´ng tÃ¬m tháº¥y thiáº¿t bá»‹ nÃ o phÃ¹ há»£p.</div>
+                              <div className="p-2 text-xs text-slate-400 italic">Không tìm thấy thiết bị nào phù hợp.</div>
                             )}
                           </div>
                         </>
@@ -1364,12 +1364,12 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
                           <tr className="bg-slate-100 text-slate-600 font-bold">
-                            <th className="py-2 px-3">TÃªn Váº­t TÆ° / Thiáº¿t Bá»‹</th>
-                            <th className="py-2 px-3 text-center w-16">ÄVT</th>
-                            <th className="py-2 px-3 text-center w-24">Sá»‘ LÆ°á»£ng</th>
-                            <th className="py-2 px-3 text-right w-32">ÄÆ¡n GiÃ¡ (Ä‘)</th>
-                            <th className="py-2 px-3 text-right w-32">ThÃ nh Tiá»n</th>
-                            <th className="py-2 px-3 text-center w-12">Ã—</th>
+                            <th className="py-2 px-3">Tên Vật Tư / Thiết Bị</th>
+                            <th className="py-2 px-3 text-center w-16">ĐVT</th>
+                            <th className="py-2 px-3 text-center w-24">Số Lượng</th>
+                            <th className="py-2 px-3 text-right w-32">Đơn Giá (đ)</th>
+                            <th className="py-2 px-3 text-right w-32">Thành Tiền</th>
+                            <th className="py-2 px-3 text-center w-12">×</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
@@ -1378,7 +1378,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                             const preVatTotal = item.hasVat && item.vatRate ? (baseTotal / (1 + item.vatRate / 100)) : baseTotal;
                             
                             const w = warehouses.find(wh => wh.id === item.warehouseId);
-                            const wName = w ? w.name : 'ChÆ°a chá»n kho';
+                            const wName = w ? w.name : 'Chưa chọn kho';
                             
                             return (
                               <tr key={idx}>
@@ -1387,7 +1387,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                     type="text"
                                     value={item.productName || ''}
                                     onChange={(e) => handleUpdateEditProductName(idx, e.target.value)}
-                                    placeholder="TÃªn váº­t tÆ° / thiáº¿t bá»‹..."
+                                    placeholder="Tên vật tư / thiết bị..."
                                     className="w-full px-2 py-1 border font-normal text-slate-800 bg-slate-50 focus:bg-white rounded text-xs outline-none focus:ring-1 focus:ring-indigo-500 mb-1"
                                   />
                                   <div className="flex items-center gap-2 mt-0.5">
@@ -1400,7 +1400,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                     type="text"
                                     value={item.unit || ''}
                                     onChange={(e) => handleUpdateEditUnit(idx, e.target.value)}
-                                    placeholder="ÄVT..."
+                                    placeholder="ĐVT..."
                                     className="w-full px-1.5 py-0.5 border text-center font-semibold text-slate-800 bg-slate-50 focus:bg-white rounded text-xs font-mono"
                                   />
                                 </td>
@@ -1421,7 +1421,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                 </td>
                                 <td className="py-2 px-3 text-right align-top">
                                   <div className="font-mono font-bold text-slate-900 mb-1">
-                                    {formatVND(item.totalPrice)} Ä‘
+                                    {formatVND(item.totalPrice)} đ
                                   </div>
                                   <div className="flex items-center justify-end gap-2 mb-1">
                                     <label className="flex items-center gap-1 cursor-pointer">
@@ -1449,7 +1449,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                   </div>
                                   {item.hasVat && (
                                     <div className="text-[9px] font-mono text-slate-500 whitespace-nowrap">
-                                      TrÆ°á»›c VAT: {formatVND(preVatTotal)} Ä‘
+                                      Trước VAT: {formatVND(preVatTotal)} đ
                                     </div>
                                   )}
                                 </td>
@@ -1468,7 +1468,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                           {editItems.length === 0 && (
                             <tr>
                               <td colSpan={5} className="py-8 text-center text-slate-400 italic">
-                                ChÆ°a cÃ³ váº­t tÆ° nÃ o Ä‘Æ°á»£c chá»n. HÃ£y dÃ¹ng Ã´ tÃ¬m kiáº¿m á»Ÿ trÃªn Ä‘á»ƒ thÃªm thiáº¿t bá»‹.
+                                Chưa có vật tư nào được chọn. Hãy dùng ô tìm kiếm ở trên để thêm thiết bị.
                               </td>
                             </tr>
                           )}
@@ -1479,15 +1479,15 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                     {/* Total math */}
                     <div className="flex flex-col items-end gap-1 border-t border-slate-200 pt-3">
                       <div className="flex justify-between items-center w-full max-w-xs text-right">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">Tá»•ng thÃ nh tiá»n (trÆ°á»›c VAT):</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Tổng thành tiền (trước VAT):</span>
                         <span className="text-xs font-mono text-slate-600">
-                          {formatVND(editItems.reduce((acc, item) => acc + (item.hasVat && item.vatRate ? ((item.quantity * item.price) / (1 + item.vatRate / 100)) : item.quantity * item.price), 0))} Ä‘
+                          {formatVND(editItems.reduce((acc, item) => acc + (item.hasVat && item.vatRate ? ((item.quantity * item.price) / (1 + item.vatRate / 100)) : item.quantity * item.price), 0))} đ
                         </span>
                       </div>
                       <div className="flex justify-between items-center w-full max-w-xs text-right">
-                        <span className="text-xs font-bold text-slate-800 uppercase">Tá»•ng cá»™ng tiá»n hÃ ng:</span>
+                        <span className="text-xs font-bold text-slate-800 uppercase">Tổng cộng tiền hàng:</span>
                         <span className="text-sm font-black text-indigo-600 font-mono">
-                          {formatVND(calculateEditTotal())} Ä‘
+                          {formatVND(calculateEditTotal())} đ
                         </span>
                       </div>
                     </div>
@@ -1499,7 +1499,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1.5">
                           <Coins className="w-4 h-4 text-emerald-600" />
-                          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">ThÃ´ng Tin Thanh ToÃ¡n (Äá»£t thanh toÃ¡n)</h4>
+                          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Thông Tin Thanh Toán (Đợt thanh toán)</h4>
                         </div>
                         <button
                           type="button"
@@ -1509,25 +1509,25 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                               invoiceId: selectedInvoice?.id || 0,
                               amount: 0,
                               paymentMethod: 'CK',
-                              note: `KhÃ¡ch thanh toÃ¡n láº§n thá»© ${editDeposits.length + 1}`,
+                              note: `Khách thanh toán lần thứ ${editDeposits.length + 1}`,
                               createdAt: new Date().toISOString()
                             }]);
                           }}
                           className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold flex items-center gap-1 shrink-0 transition-colors"
                         >
-                          <Plus className="w-3 h-3" /> ThÃªm Ä‘á»£t thanh toÃ¡n
+                          <Plus className="w-3 h-3" /> Thêm đợt thanh toán
                         </button>
                       </div>
 
                       {editDeposits.length === 0 ? (
-                        <p className="text-xs text-slate-400 italic">ChÆ°a cÃ³ thÃ´ng tin thanh toÃ¡n nÃ o Ä‘Æ°á»£c ghi nháº­n cho hÃ³a Ä‘Æ¡n nÃ y.</p>
+                        <p className="text-xs text-slate-400 italic">Chưa có thông tin thanh toán nào được ghi nhận cho hóa đơn này.</p>
                       ) : (
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {editDeposits.map((dep, dIdx) => (
                             <div key={dIdx} className="bg-white p-2 border border-slate-200 rounded-md flex flex-wrap md:flex-nowrap gap-2 items-center justify-between">
-                              <span className="text-xs font-bold text-slate-500">Äá»£t {dIdx + 1}</span>
+                              <span className="text-xs font-bold text-slate-500">Đợt {dIdx + 1}</span>
                               <div className="flex-1 min-w-[120px]">
-                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Sá»‘ tiá»n thanh toÃ¡n</label>
+                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Số tiền thanh toán</label>
                                 <PriceInput
                                   value={dep.amount}
                                   onChange={(val) => {
@@ -1536,11 +1536,11 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                     setEditDeposits(updated);
                                   }}
                                   className="w-full px-1.5 py-0.5 border text-right font-bold text-slate-800 rounded text-xs font-mono bg-slate-50 focus:bg-white"
-                                  placeholder="Sá»‘ tiá»n..."
+                                  placeholder="Số tiền..."
                                 />
                               </div>
                               <div className="w-28 shrink-0">
-                                <label className="block text-[8px] font-bold text-slate-400 uppercase">PhÆ°Æ¡ng thá»©c</label>
+                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Phương thức</label>
                                 <select
                                   value={dep.paymentMethod.startsWith('CK') ? 'CK' : dep.paymentMethod}
                                   onChange={(e) => {
@@ -1550,12 +1550,12 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                   }}
                                   className="w-full px-1.5 py-0.5 border text-xs font-semibold rounded text-slate-700 bg-slate-50 focus:bg-white"
                                 >
-                                  <option value="CK">Chuyá»ƒn khoáº£n</option>
-                                  <option value="TM">Tiá»n máº·t</option>
+                                  <option value="CK">Chuyển khoản</option>
+                                  <option value="TM">Tiền mặt</option>
                                 </select>
                               </div>
                               <div className="flex-1 min-w-[150px]">
-                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Ghi chÃº</label>
+                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Ghi chú</label>
                                 <input
                                   type="text"
                                   value={dep.note || ''}
@@ -1564,7 +1564,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                     updated[dIdx].note = e.target.value;
                                     setEditDeposits(updated);
                                   }}
-                                  placeholder="Ghi chÃº (KhÃ¡ch thanh toÃ¡n...)"
+                                  placeholder="Ghi chú (Khách thanh toán...)"
                                   className="w-full px-1.5 py-0.5 border rounded text-xs text-slate-700 font-medium bg-slate-50 focus:bg-white"
                                 />
                               </div>
@@ -1593,7 +1593,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       onClick={() => setIsEditing(false)}
                       className="px-4 py-1.5 border hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-md transition-colors"
                     >
-                      Há»§y Bá»
+                      Hủy Bỏ
                     </button>
                     <button
                       type="submit"
@@ -1605,7 +1605,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       ) : (
                         <Check className="w-3 h-3" />
                       )}
-                      <span>{isCreatingFromTemplate ? "ThÃªm Má»›i" : "LÆ°u Thay Äá»•i"}</span>
+                      <span>{isCreatingFromTemplate ? "Thêm Mới" : "Lưu Thay Đổi"}</span>
                     </button>
                   </div>
                 </form>
@@ -1624,7 +1624,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    Phiáº¿u tiÃªu chuáº©n (KhÃ´ng VAT)
+                    Phiếu tiêu chuẩn (Không VAT)
                   </button>
                   <button
                     type="button"
@@ -1635,7 +1635,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    Phiáº¿u chi tiáº¿t VAT (CÃ³ TrÆ°á»›c VAT)
+                    Phiếu chi tiết VAT (Có Trước VAT)
                   </button>
                   <button
                     type="button"
@@ -1646,7 +1646,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    BiÃªn báº£n bÃ n giao
+                    Biên bản bàn giao
                   </button>
                 </div>
 
@@ -1657,39 +1657,39 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       <div style={{ padding: '10px 0' }}>
                         {/* Company Header matching image */}
                         <div style={{ marginBottom: '25px', fontFamily: '"Times New Roman", Times, serif' }}>
-                          <div style={{ fontWeight: 'bold', fontSize: '15px', textTransform: 'uppercase' }}>CÃ”NG TY TRÃCH NHIá»†M Há»®U Háº N Dá»ŠCH Vá»¤ VIá»„N THÃ”NG Äá»¨C VINH</div>
-                          <div style={{ fontSize: '14px' }}>137 ÄÆ°á»ng Thá»›i Tam ThÃ´n 9, XÃ£ ÄÃ´ng Tháº¡nh, ThÃ nh phá»‘ Há»“ ChÃ­ Minh, Viá»‡t Nam.</div>
+                          <div style={{ fontWeight: 'bold', fontSize: '15px', textTransform: 'uppercase' }}>CÔNG TY TRÁCH NHIỆM HỮU HẠN DỊCH VỤ VIỄN THÔNG ĐỨC VINH</div>
+                          <div style={{ fontSize: '14px' }}>137 Đường Thới Tam Thôn 9, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam.</div>
                         </div>
 
                         {/* Title Section */}
                         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '22px', letterSpacing: '0.5px' }}>BIÃŠN Báº¢N BÃ€N GIAO</div>
+                          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '22px', letterSpacing: '0.5px' }}>BIÊN BẢN BÀN GIAO</div>
                           <div style={{ fontSize: '14px', fontStyle: 'italic' }}>
-                            NgÃ y {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getDate()).padStart(2, '0') : '...'} thÃ¡ng {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getMonth() + 1).padStart(2, '0') : '...'} nÄƒm {selectedInvoice.createdAt ? new Date(selectedInvoice.createdAt).getFullYear() : '...'} táº¡i
+                            Ngày {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getDate()).padStart(2, '0') : '...'} tháng {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getMonth() + 1).padStart(2, '0') : '...'} năm {selectedInvoice.createdAt ? new Date(selectedInvoice.createdAt).getFullYear() : '...'} tại
                           </div>
                         </div>
 
                         {/* Party Information */}
                         <div style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '15px' }}>
                           <div>
-                            <strong>Äáº¡i diá»‡n bÃªn nháº­n (BÃªn A):</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>{selectedInvoice.customerName || "...................................................."}</span>
+                            <strong>Đại diện bên nhận (Bên A):</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>{selectedInvoice.customerName || "...................................................."}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                            <span style={{ width: '50%' }}>Ã”ng (BÃ ): ....................................................</span>
-                            <span style={{ width: '50%' }}>Chá»©c vá»¥: ....................................................</span>
+                            <span style={{ width: '50%' }}>Ông (Bà): ....................................................</span>
+                            <span style={{ width: '50%' }}>Chức vụ: ....................................................</span>
                           </div>
                           <div style={{ marginTop: '8px' }}>
-                            <strong>Äáº¡i diá»‡n bÃªn giao (BÃªn B):</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>CÃ”NG TY TRÃCH NHIá»†M Há»®U Háº N Dá»ŠCH Vá»¤ VIá»„N THÃ”NG Äá»¨C VINH</span>
+                            <strong>Đại diện bên giao (Bên B):</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>CÔNG TY TRÁCH NHIỆM HỮU HẠN DỊCH VỤ VIỄN THÔNG ĐỨC VINH</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                            <span style={{ width: '50%' }}>Ã”ng (BÃ ): ....................................................</span>
-                            <span style={{ width: '50%' }}>Chá»©c vá»¥: ....................................................</span>
+                            <span style={{ width: '50%' }}>Ông (Bà): ....................................................</span>
+                            <span style={{ width: '50%' }}>Chức vụ: ....................................................</span>
                           </div>
                           <div style={{ marginTop: '8px' }}>
-                            NgÃ y {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getDate()).padStart(2, '0') : '...'} thÃ¡ng {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getMonth() + 1).padStart(2, '0') : '...'} nÄƒm {selectedInvoice.createdAt ? new Date(selectedInvoice.createdAt).getFullYear() : '...'} táº¡i
+                            Ngày {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getDate()).padStart(2, '0') : '...'} tháng {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getMonth() + 1).padStart(2, '0') : '...'} năm {selectedInvoice.createdAt ? new Date(selectedInvoice.createdAt).getFullYear() : '...'} tại
                           </div>
                           <div style={{ fontWeight: 'bold', marginTop: '6px' }}>
-                            Hai bÃªn cÃ¹ng nhau bÃ n giao hÃ ng hoÃ¡ chi tiáº¿t nhÆ° sau:
+                            Hai bên cùng nhau bàn giao hàng hoá chi tiết như sau:
                           </div>
                         </div>
 
@@ -1698,10 +1698,10 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                           <thead>
                             <tr>
                               <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '40px', fontWeight: 'bold' }}>STT</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', fontWeight: 'bold' }}>TÃªn hÃ ng</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '90px', fontWeight: 'bold' }}>ÄÆ¡n vá»‹ tÃ­nh</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '90px', fontWeight: 'bold' }}>Sá»‘ lÆ°á»£ng</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '180px', fontWeight: 'bold' }}>Cháº¥t lÆ°á»£ng</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', fontWeight: 'bold' }}>Tên hàng</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '90px', fontWeight: 'bold' }}>Đơn vị tính</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '90px', fontWeight: 'bold' }}>Số lượng</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '180px', fontWeight: 'bold' }}>Chất lượng</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1709,9 +1709,9 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                               <tr key={idx}>
                                 <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{idx + 1}</td>
                                 <td style={{ border: '1px solid black', padding: '6px' }}>{item.productName}</td>
-                                <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "CÃ¡i"}</td>
+                                <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "Cái"}</td>
                                 <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{formatQuantity(item.quantity)}</td>
-                                <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>Tá»‘t</td>
+                                <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>Tốt</td>
                               </tr>
                             ))}
                           </tbody>
@@ -1719,19 +1719,19 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
 
                         {/* Warranty Information */}
                         <div style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '35px' }}>
-                          <div>Vá» cháº¥t lÆ°á»£ng hÃ ng hÃ³a vÃ  phá»¥ kiá»‡n: HÃ ng hoÃ¡ Ä‘Æ°á»£c cung cáº¥p má»›i 100%.</div>
-                          <div>BiÃªn báº£n nÃ y Ä‘Æ°á»£c láº­p thÃ nh 02 (hai) báº£n cÃ³ giÃ¡ trá»‹ nhÆ° nhau, má»—i bÃªn giá»¯ 01 (má»™t) báº£n Ä‘á»ƒ cÃ¹ng thá»±c hiá»‡n.</div>
+                          <div>Về chất lượng hàng hóa và phụ kiện: Hàng hoá được cung cấp mới 100%.</div>
+                          <div>Biên bản này được lập thành 02 (hai) bản có giá trị như nhau, mỗi bên giữ 01 (một) bản để cùng thực hiện.</div>
                         </div>
 
                         {/* Signatures */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 40px 100px 40px', fontSize: '14px' }}>
                           <div style={{ textAlign: 'center', width: '250px' }}>
-                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>Äáº I DIá»†N BÃŠN NHáº¬N</div>
-                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(KÃ½, há» tÃªn)</div>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>ĐẠI DIỆN BÊN NHẬN</div>
+                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(Ký, họ tên)</div>
                           </div>
                           <div style={{ textAlign: 'center', width: '250px' }}>
-                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>Äáº I DIá»†N BÃŠN GIAO</div>
-                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(KÃ½, há» tÃªn)</div>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>ĐẠI DIỆN BÊN GIAO</div>
+                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(Ký, họ tên)</div>
                           </div>
                         </div>
                       </div>
@@ -1739,24 +1739,24 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       <>
                         <div style={{ border: '1px solid black' }}>
                         <div style={{ textAlign: 'center', borderBottom: '1px solid black', padding: '10px' }}>
-                          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '18px' }}>CÃ”NG TY TNHH Dá»ŠCH Vá»¤ VIá»„N THÃ”NG Äá»¨C VINH</div>
-                          <div>Äá»‹a chá»‰: 137 ÄÆ°á»ng Thá»›i Tam ThÃ´n 9, XÃ£ Thá»›i Tam ThÃ´n, Huyá»‡n HÃ³c MÃ´n, TP.Há»“ ChÃ­ Minh</div>
+                          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '18px' }}>CÔNG TY TNHH DỊCH VỤ VIỄN THÔNG ĐỨC VINH</div>
+                          <div>Địa chỉ: 137 Đường Thới Tam Thôn 9, Xã Thới Tam Thôn, Huyện Hóc Môn, TP.Hồ Chí Minh</div>
                           <div>MST: 0311193770</div>
                           <div>Hotline: 0938288876-0915877739.</div>
                           <div>FB: DUCVINHSOLAR-Website: Ducvinhsolar.com</div>
                         </div>
                         
                         <div style={{ textAlign: 'center', padding: '15px 15px 5px 15px' }}>
-                          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '22px', marginBottom: '5px' }}>Báº¢NG BÃO GIÃ</div>
-                          <div style={{ fontSize: '14px', fontStyle: 'italic' }}>NgÃ y {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getDate()).padStart(2, '0') : '...'} thÃ¡ng {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getMonth() + 1).padStart(2, '0') : '...'} nÄƒm {selectedInvoice.createdAt ? new Date(selectedInvoice.createdAt).getFullYear() : '...'}</div>
-                          <div style={{ fontSize: '14px', marginBottom: '15px' }}>Sá»‘: {selectedInvoice.documentCode}</div>
+                          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '22px', marginBottom: '5px' }}>BẢNG BÁO GIÁ</div>
+                          <div style={{ fontSize: '14px', fontStyle: 'italic' }}>Ngày {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getDate()).padStart(2, '0') : '...'} tháng {selectedInvoice.createdAt ? String(new Date(selectedInvoice.createdAt).getMonth() + 1).padStart(2, '0') : '...'} năm {selectedInvoice.createdAt ? new Date(selectedInvoice.createdAt).getFullYear() : '...'}</div>
+                          <div style={{ fontSize: '14px', marginBottom: '15px' }}>Số: {selectedInvoice.documentCode}</div>
                         </div>
                         
                         <div style={{ padding: '0 15px 15px 15px', borderBottom: '1px solid black' }}>
-                          <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>TÃªn khÃ¡ch hÃ ng:</strong> {selectedInvoice.customerName || "...................................................."}</div>
-                          <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Äá»‹a chá»‰:</strong> {selectedInvoice.customerAddress || "...................................................."}</div>
-                          <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Sá»‘ Ä‘iá»‡n thoáº¡i:</strong> {selectedInvoice.customerPhone || "...................................................."}</div>
-                          <div style={{ fontSize: '14px' }}><strong>MÃ£ sá»‘ thuáº¿:</strong> {selectedInvoice.customerTaxId || "...................................................."}</div>
+                          <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Tên khách hàng:</strong> {selectedInvoice.customerName || "...................................................."}</div>
+                          <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Địa chỉ:</strong> {selectedInvoice.customerAddress || "...................................................."}</div>
+                          <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Số điện thoại:</strong> {selectedInvoice.customerPhone || "...................................................."}</div>
+                          <div style={{ fontSize: '14px' }}><strong>Mã số thuế:</strong> {selectedInvoice.customerTaxId || "...................................................."}</div>
                         </div>
 
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1764,24 +1764,24 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                             {printType === 'vat' ? (
                               <tr>
                                 <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '40px' }}>STT</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>MÃ£ sáº£n pháº©m</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>TÃªn thiáº¿t bá»‹</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '60px' }}>ÄÆ¡n vá»‹</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '60px' }}>Sá»‘ lÆ°á»£ng</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '90px' }}>ÄÆ¡n giÃ¡</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>Mã sản phẩm</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>Tên thiết bị</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '60px' }}>Đơn vị</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '60px' }}>Số lượng</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '90px' }}>Đơn giá</th>
                                 <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '50px' }}>VAT</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>TrÆ°á»›c VAT</th>
-                                <th style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'center', width: '110px' }}>ThÃ nh tiá»n</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>Trước VAT</th>
+                                <th style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'center', width: '110px' }}>Thành tiền</th>
                               </tr>
                             ) : (
                               <tr>
                                 <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '40px' }}>STT</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>MÃ£ sáº£n pháº©m</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>TÃªn thiáº¿t bá»‹</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '80px' }}>ÄÆ¡n vá»‹</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '80px' }}>Sá»‘ lÆ°á»£ng</th>
-                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>ÄÆ¡n giÃ¡</th>
-                                <th style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'center', width: '120px' }}>ThÃ nh tiá»n</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>Mã sản phẩm</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>Tên thiết bị</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '80px' }}>Đơn vị</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '80px' }}>Số lượng</th>
+                                <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>Đơn giá</th>
+                                <th style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'center', width: '120px' }}>Thành tiền</th>
                               </tr>
                             )}
                           </thead>
@@ -1798,7 +1798,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{idx + 1}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.productCode || ""}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>{item.productName}</td>
-                                      <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "CÃ¡i"}</td>
+                                      <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "Cái"}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{formatQuantity(item.quantity)}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'right' }}>{donGiaPreVat.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.hasVat ? `${vatRate}%` : '0%'}</td>
@@ -1811,7 +1811,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                   <td colSpan={7} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                     <div style={{ display: 'flex', fontSize: '11px' }}>
                                       <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block' }}>II</span>
-                                      <span style={{ fontWeight: 'bold' }}>Tá»”NG Cá»˜NG TIá»€N HÃ€NG (TRÆ¯á»šC VAT)</span>
+                                      <span style={{ fontWeight: 'bold' }}>TỔNG CỘNG TIỀN HÀNG (TRƯỚC VAT)</span>
                                     </div>
                                   </td>
                                   <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'right', fontWeight: 'bold' }}>
@@ -1827,7 +1827,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                   <td colSpan={7} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                     <div style={{ display: 'flex', fontSize: '11px' }}>
                                       <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block' }}>III</span>
-                                      <span style={{ fontWeight: 'bold' }}>Tá»”NG TIá»€N THUáº¾ GTGT (VAT)</span>
+                                      <span style={{ fontWeight: 'bold' }}>TỔNG TIỀN THUẾ GTGT (VAT)</span>
                                     </div>
                                   </td>
                                   <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'right', fontWeight: 'bold' }}>
@@ -1845,7 +1845,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                   <td colSpan={8} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                     <div style={{ display: 'flex', fontSize: '11px' }}>
                                       <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block' }}>IV</span>
-                                      <span style={{ fontWeight: 'bold' }}>Tá»”NG Cá»˜NG TIá»€N THANH TOÃN</span>
+                                      <span style={{ fontWeight: 'bold' }}>TỔNG CỘNG TIỀN THANH TOÁN</span>
                                     </div>
                                   </td>
                                   <td style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'right', fontWeight: 'bold' }}>
@@ -1859,7 +1859,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                         <td colSpan={8} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', fontStyle: 'italic' }}>
                                           <div style={{ display: 'flex', fontSize: '11px' }}>
                                             <span style={{ width: '40px', textAlign: 'center', display: 'inline-block' }}>-</span>
-                                            <span style={{ fontWeight: 'bold' }}>{dep.note || `KhÃ¡ch thanh toÃ¡n láº§n thá»© ${depIdx + 1}`}</span>
+                                            <span style={{ fontWeight: 'bold' }}>{dep.note || `Khách thanh toán lần thứ ${depIdx + 1}`}</span>
                                           </div>
                                         </td>
                                         <td style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'right', fontStyle: 'italic', fontWeight: 'bold', color: '#b45309' }}>
@@ -1871,7 +1871,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                       <td colSpan={8} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                         <div style={{ display: 'flex', fontSize: '11px' }}>
                                           <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block' }}>V</span>
-                                          <span style={{ fontWeight: 'bold' }}>CÃ’N Láº I Cáº¦N THANH TOÃN</span>
+                                          <span style={{ fontWeight: 'bold' }}>CÒN LẠI CẦN THANH TOÁN</span>
                                         </div>
                                       </td>
                                       <td style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'right', fontWeight: 'bold', color: '#1e1b4b' }}>
@@ -1890,7 +1890,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{idx + 1}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.productCode || ""}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>{item.productName}</td>
-                                      <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "CÃ¡i"}</td>
+                                      <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "Cái"}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{formatQuantity(item.quantity)}</td>
                                       <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'right' }}>{item.price.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                       <td style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'right' }}>{baseTotal.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -1901,7 +1901,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                   <td colSpan={6} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                     <div style={{ display: 'flex' }}>
                                       <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block' }}>II</span>
-                                      <span style={{ fontWeight: 'bold' }}>Tá»”NG Cá»˜NG</span>
+                                      <span style={{ fontWeight: 'bold' }}>TỔNG CỘNG</span>
                                     </div>
                                   </td>
                                   <td style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'right', fontWeight: 'bold' }}>
@@ -1915,7 +1915,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                         <td colSpan={6} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', fontStyle: 'italic' }}>
                                           <div style={{ display: 'flex' }}>
                                             <span style={{ width: '40px', textAlign: 'center', display: 'inline-block' }}>-</span>
-                                            <span style={{ fontWeight: 'bold' }}>{dep.note || `KhÃ¡ch thanh toÃ¡n láº§n thá»© ${depIdx + 1}`}</span>
+                                            <span style={{ fontWeight: 'bold' }}>{dep.note || `Khách thanh toán lần thứ ${depIdx + 1}`}</span>
                                           </div>
                                         </td>
                                         <td style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'right', fontStyle: 'italic', fontWeight: 'bold', color: '#b45309' }}>
@@ -1927,7 +1927,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                                       <td colSpan={6} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                         <div style={{ display: 'flex' }}>
                                           <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block' }}>III</span>
-                                          <span style={{ fontWeight: 'bold' }}>CÃ’N Láº I Cáº¦N THANH TOÃN</span>
+                                          <span style={{ fontWeight: 'bold' }}>CÒN LẠI CẦN THANH TOÁN</span>
                                         </div>
                                       </td>
                                       <td style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'right', fontWeight: 'bold', color: '#1e1b4b' }}>
@@ -1942,20 +1942,20 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         </table>
 
                         <div style={{ padding: '6px', textAlign: 'center', fontStyle: 'italic', fontWeight: 'bold' }}>
-                          Báº±ng chá»¯: {(() => {
+                          Bằng chữ: {(() => {
                             const totalInvoiceAmount = selectedInvoice.items?.reduce((acc, item) => acc + (item.quantity * item.price), 0) || 0;
                             const totalDepositsAmount = selectedInvoice.depositEnabled ? (selectedInvoice.deposits?.reduce((acc, d) => acc + d.amount, 0) || 0) : 0;
                             const amount = totalInvoiceAmount - totalDepositsAmount;
-                            if (amount === 0) return "KhÃ´ng Ä‘á»“ng cháºµn./.";
-                            const t = ["khÃ´ng", "má»™t", "hai", "ba", "bá»‘n", "nÄƒm", "sÃ¡u", "báº£y", "tÃ¡m", "chÃ­n"];
+                            if (amount === 0) return "Không đồng chẵn./.";
+                            const t = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
                             const r = (r2, n) => {
                               let o2 = "", a2 = Math.floor(r2 / 100), e2 = r2 % 100;
-                              if (n || a2 > 0) { o2 += " " + t[a2] + " trÄƒm"; o2 += e2 === 0 ? "" : (e2 < 10 ? " láº»" : ""); }
+                              if (n || a2 > 0) { o2 += " " + t[a2] + " trăm"; o2 += e2 === 0 ? "" : (e2 < 10 ? " lẻ" : ""); }
                               let i2 = Math.floor(e2 / 10), m2 = e2 % 10;
-                              if (i2 > 0) { o2 += i2 === 1 ? " mÆ°á»i" : " " + t[i2] + " mÆ°Æ¡i"; }
+                              if (i2 > 0) { o2 += i2 === 1 ? " mười" : " " + t[i2] + " mươi"; }
                               if (m2 > 0) {
-                                if (m2 === 1 && i2 > 1) o2 += " má»‘t";
-                                else if (m2 === 5 && i2 > 0) o2 += " lÄƒm";
+                                if (m2 === 1 && i2 > 1) o2 += " mốt";
+                                else if (m2 === 5 && i2 > 0) o2 += " lăm";
                                 else o2 += " " + t[m2];
                               }
                               return o2;
@@ -1967,34 +1967,34 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                               num = Math.floor(num / 1e9);
                               let i2 = ty > 0 ? ((num2, e3) => {
                                 let resO = "", a3 = Math.floor(num2 / 1e6), n2 = num2 % 1e6;
-                                if (a3 > 0) { resO += r(a3, e3) + " triá»‡u"; e3 = true; }
+                                if (a3 > 0) { resO += r(a3, e3) + " triệu"; e3 = true; }
                                 let idx2 = Math.floor(n2 / 1e3), m3 = n2 % 1e3;
-                                if (idx2 > 0) { resO += r(idx2, e3) + " nghÃ¬n"; e3 = true; }
+                                if (idx2 > 0) { resO += r(idx2, e3) + " nghìn"; e3 = true; }
                                 if (m3 > 0) resO += r(m3, e3);
                                 return resO;
                               })(ty, num > 0) : "";
-                              if (i2) o2 = i2 + (e2 > 0 ? " tá»·".repeat(e2) : "") + o2;
+                              if (i2) o2 = i2 + (e2 > 0 ? " tỷ".repeat(e2) : "") + o2;
                               e2++;
                             } while (num > 0);
                             let res = o2.trim();
-                            if (res.startsWith("láº» ")) res = res.substring(3);
-                            if (isNegative) res = "Ã¢m " + res;
+                            if (res.startsWith("lẻ ")) res = res.substring(3);
+                            if (isNegative) res = "âm " + res;
                             res = res.charAt(0).toUpperCase() + res.slice(1);
-                            return res + " Ä‘á»“ng cháºµn./.";
+                            return res + " đồng chẵn./.";
                           })()}
                         </div>
                         </div>
 
                         <div style={{ padding: '15px 10px' }}>
-                          <div>Thanh toÃ¡n 100% trÆ°á»›c khi xuáº¥t hÃ ng xuáº¥t táº¡i kho .</div>
-                          <div style={{ fontWeight: 'bold', marginTop: '4px' }}>TK THANH TOÃN:</div>
-                          <div style={{ fontWeight: 'bold' }}>1. CÃ”NG TY: TÃªn TK: CÃ´ng Ty TNHH DV VIá»„N THÃ”NG Äá»¨C VINH</div>
-                          <div style={{ fontWeight: 'bold' }}>TÃ i khoáº£n sá»‘ : 661000068 - NgÃ¢n hÃ ng ACB â€“ CN PhÃº LÃ¢m, Tp.HCM</div>
+                          <div>Thanh toán 100% trước khi xuất hàng xuất tại kho .</div>
+                          <div style={{ fontWeight: 'bold', marginTop: '4px' }}>TK THANH TOÁN:</div>
+                          <div style={{ fontWeight: 'bold' }}>1. CÔNG TY: Tên TK: Công Ty TNHH DV VIỄN THÔNG ĐỨC VINH</div>
+                          <div style={{ fontWeight: 'bold' }}>Tài khoản số : 661000068 - Ngân hàng ACB – CN Phú Lâm, Tp.HCM</div>
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '20px 40px 100px 40px' }}>
-                          <div style={{ fontWeight: 'bold', textAlign: 'center', width: '200px' }}>XÃC NHáº¬N Cá»¦A KHÃCH HÃ€NG</div>
-                          <div style={{ fontWeight: 'bold', textAlign: 'center', width: '200px' }}>Äáº I DIá»†N CÃ”NG TY</div>
+                          <div style={{ fontWeight: 'bold', textAlign: 'center', width: '200px' }}>XÁC NHẬN CỦA KHÁCH HÀNG</div>
+                          <div style={{ fontWeight: 'bold', textAlign: 'center', width: '200px' }}>ĐẠI DIỆN CÔNG TY</div>
                         </div>
                       </>
                     )}
@@ -2005,41 +2005,41 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                   
                   {/* Status Toggle buttons inside view */}
                   <div className="space-y-1">
-                    <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Cáº­p nháº­t nhanh phÆ°Æ¡ng thá»©c thanh toÃ¡n</span>
+                    <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Cập nhật nhanh phương thức thanh toán</span>
                     <div className="flex gap-1.5 bg-white border rounded-lg p-1">
                       <button
                         onClick={() => handleChangeStatus(selectedInvoice.id, 'CTT')}
                         className={`px-3 py-1 text-xs font-semibold rounded ${selectedInvoice.status === 'CTT' ? 'bg-red-50 text-red-700 font-bold' : 'text-slate-500 hover:text-slate-800'}`}
                       >
-                        ChÆ°a thanh toÃ¡n
+                        Chưa thanh toán
                       </button>
                       <button
                         onClick={() => handleChangeStatus(selectedInvoice.id, 'TM')}
                         className={`px-3 py-1 text-xs font-semibold rounded ${selectedInvoice.status === 'TM' ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-slate-500 hover:text-slate-800'}`}
                       >
-                        Tiá»n máº·t
+                        Tiền mặt
                       </button>
                       <button
                         onClick={() => handleChangeStatus(selectedInvoice.id, 'CK')}
                         className={`px-3 py-1 text-xs font-semibold rounded ${selectedInvoice.status.startsWith('CK') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-500 hover:text-slate-800'}`}
                       >
-                        Chuyá»ƒn khoáº£n
+                        Chuyển khoản
                       </button>
                     </div>
                   </div>
 
-                                  {selectedInvoice.status.startsWith('CK') && (
-                    <div className="flex gap-2 items-center mb-4 p-2 bg-blue-50/50 rounded-lg border border-blue-100 w-[385px]">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">TÃ i khoáº£n nháº­n:</span>
+                  {selectedInvoice.status.startsWith('CK') && (
+                    <div className="flex gap-2 items-center mb-4 p-2 bg-blue-50/50 rounded-lg border border-blue-100">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Tài khoản nhận:</span>
                       <select
                         value={selectedInvoice.status.startsWith('CK - ') ? selectedInvoice.status.substring(5) : ''}
                         onChange={(e) => {
                           const val = e.target.value;
                           handleChangeStatus(selectedInvoice.id, val ? `CK - ${val}` : 'CK');
                         }}
-                        className="px-2 py-1 text-xs border border-slate-200 rounded font-semibold text-slate-700 outline-none focus:border-blue-400 w-[300px]"
+                        className="px-2 py-1 text-xs border border-slate-200 rounded font-semibold text-slate-700 outline-none focus:border-blue-400"
                       >
-                        <option value="">-- TÃ¹y chá»n --</option>
+                        <option value="">-- Tùy chọn --</option>
                         {bankAccounts.map(b => {
                           const bankStr = `${b.bankName} - ${b.accountNumber} - ${b.accountName}`;
                           return <option key={b.id} value={bankStr}>{bankStr}</option>;
@@ -2057,7 +2057,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                       >
                         <Coins className="w-4 h-4 text-emerald-600" />
-                        <span>Thanh ToÃ¡n ThÃªm</span>
+                        <span>Thanh Toán Thêm</span>
                       </button>
                     )}
 
@@ -2067,7 +2067,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                       >
                         <Edit3 className="w-4 h-4" />
-                        <span>Sá»­a HÃ³a ÄÆ¡n</span>
+                        <span>Sửa Hóa Đơn</span>
                       </button>
                     )}
 
@@ -2076,7 +2076,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <Printer className="w-4 h-4" />
-                      <span>In HÃ³a ÄÆ¡n</span>
+                      <span>In Hóa Đơn</span>
                     </button>
 
                     <button
@@ -2085,17 +2085,15 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                                        <span>Xuáº¥t Excel</span>
+                      <span>Xuất Excel</span>
                     </button>
 
-                    <div className="flex-1 min-w-[20px]"></div>
-                    <div className="w-px h-8 bg-slate-300 mx-1 hidden lg:block"></div>
                     <button
                       onClick={() => handleDeleteInvoice(selectedInvoice.id)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors lg:ml-2"
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
-                      <span>XÃ³a HÃ³a ÄÆ¡n</span>
+                      <span>Xóa Hóa Đơn</span>
                     </button>
                   </div>
 
@@ -2105,17 +2103,17 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                 {showAddDeposit && (
                   <form onSubmit={handleAddDepositPayment} className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3 animate-in slide-in-from-top-3 duration-100">
                     <h5 className="text-xs font-bold text-emerald-800 flex items-center gap-1.5 uppercase">
-                      <Coins className="w-4 h-4 text-emerald-600" /> Thanh toÃ¡n thÃªm tá»« khÃ¡ch hÃ ng
+                      <Coins className="w-4 h-4 text-emerald-600" /> Thanh toán thêm từ khách hàng
                     </h5>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Sá»‘ tiá»n thanh toÃ¡n (VND)</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Số tiền thanh toán (VND)</label>
                         <input
                           type="number"
                           required
                           min="1"
-                          placeholder="Sá»‘ tiá»n..."
+                          placeholder="Số tiền..."
                           value={depositAmount}
                           onChange={(e) => setDepositAmount(Number(e.target.value))}
                           className="w-full px-3 py-1 bg-white border border-slate-200 rounded text-sm font-mono font-medium"
@@ -2123,14 +2121,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       </div>
 
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">PhÆ°Æ¡ng thá»©c nháº­n</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Phương thức nhận</label>
                         <select
                           value={depositMethod}
                           onChange={(e: any) => setDepositMethod(e.target.value)}
                           className="w-full px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold"
                         >
-                          <option value="CK">Chuyá»ƒn khoáº£n (CK)</option>
-                          <option value="TM">Tiá»n máº·t (TM)</option>
+                          <option value="CK">Chuyển khoản (CK)</option>
+                          <option value="TM">Tiền mặt (TM)</option>
                         </select>
                         {depositMethod === 'CK' && (
                           <select
@@ -2138,7 +2136,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                             onChange={(e) => setSelectedDepositBankAccount(e.target.value)}
                             className="w-full mt-1 px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500"
                           >
-                            <option value="">-- Chá»n tÃ i khoáº£n chuyá»ƒn --</option>
+                            <option value="">-- Chọn tài khoản chuyển --</option>
                             {bankAccounts.map(b => {
                               const bankStr = `${b.bankName} - ${b.accountNumber} - ${b.accountName}`;
                               return <option key={b.id} value={bankStr}>{bankStr}</option>;
@@ -2148,11 +2146,11 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                       </div>
 
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Ghi chÃº thanh toÃ¡n</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Ghi chú thanh toán</label>
                         <div className="flex gap-2">
                           <input
                             type="text"
-                            placeholder="Thanh toÃ¡n Ä‘á»£t 2..."
+                            placeholder="Thanh toán đợt 2..."
                             value={depositNote}
                             onChange={(e) => setDepositNote(e.target.value)}
                             className="flex-1 px-3 py-1 bg-white border border-slate-200 rounded text-xs"
@@ -2161,7 +2159,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                             type="submit"
                             className="px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1"
                           >
-                            <Check className="w-3.5 h-3.5" /> LÆ°u
+                            <Check className="w-3.5 h-3.5" /> Lưu
                           </button>
                         </div>
                       </div>
@@ -2173,7 +2171,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                 <div className="space-y-3">
                   <h4 className="font-display font-semibold text-slate-700 text-sm flex items-center gap-1.5 border-b pb-2">
                     <Clock className="w-4.5 h-4.5 text-slate-400" />
-                    <span>Nháº­t kÃ½ hÃ³a Ä‘Æ¡n (Audit Trail Log)</span>
+                    <span>Nhật ký hóa đơn (Audit Trail Log)</span>
                   </h4>
                   <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 bg-slate-50 rounded-lg p-3 border">
                     {selectedInvoice.logs && selectedInvoice.logs.length > 0 ? (
@@ -2184,7 +2182,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                               {log.action}
                             </span>
                             <p className="text-slate-600 font-medium">{log.details}</p>
-                            <p className="text-slate-400 text-[10px]">NgÆ°á»i thá»±c hiá»‡n: <b>{log.userEmail}</b></p>
+                            <p className="text-slate-400 text-[10px]">Người thực hiện: <b>{log.userEmail}</b></p>
                           </div>
                           <span className="text-[10px] text-slate-400 font-mono shrink-0">
                             {new Date(log.createdAt).toLocaleString('vi-VN')}
@@ -2192,7 +2190,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                         </div>
                       ))
                     ) : (
-                      <p className="text-xs text-slate-400 italic text-center py-4">ChÆ°a cÃ³ nháº­t kÃ½ hoáº¡t Ä‘á»™ng nÃ o.</p>
+                      <p className="text-xs text-slate-400 italic text-center py-4">Chưa có nhật ký hoạt động nào.</p>
                     )}
                   </div>
                 </div>
@@ -2214,7 +2212,7 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                 </svg>
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-bold text-slate-900">XÃ¡c nháº­n</h3>
+                <h3 className="text-lg font-bold text-slate-900">Xác nhận</h3>
                 <p className="text-sm text-slate-500">{confirmDialog.message}</p>
               </div>
               <div className="pt-4 flex gap-3">
@@ -2223,14 +2221,14 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                   className="flex-1 bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors"
                   onClick={() => setConfirmDialog(null)}
                 >
-                  Há»§y
+                  Hủy
                 </button>
                 <button
                   type="button"
                   className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200"
                   onClick={confirmDialog.onConfirm}
                 >
-                  Äá»“ng Ã½
+                  Đồng ý
                 </button>
               </div>
             </div>
@@ -2243,17 +2241,17 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[70] p-4">
           <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-display font-semibold text-slate-800">ThÃªm KhÃ¡ch HÃ ng Nhanh</h3>
-              <button type="button" onClick={() => setShowNewCustModal(false)} className="text-slate-400 hover:text-slate-600 text-lg">Ã—</button>
+              <h3 className="font-display font-semibold text-slate-800">Thêm Khách Hàng Nhanh</h3>
+              <button type="button" onClick={() => setShowNewCustModal(false)} className="text-slate-400 hover:text-slate-600 text-lg">×</button>
             </div>
             
             <form onSubmit={handleQuickAddCustomer} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">TÃªn KhÃ¡ch HÃ ng / Äáº¡i LÃ½</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tên Khách Hàng / Đại Lý</label>
                 <input
                   type="text"
                   required
-                  placeholder="VÃ­ dá»¥: Äáº¡i lÃ½ Äá»©c PhÃ¡t Solar"
+                  placeholder="Ví dụ: Đại lý Đức Phát Solar"
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
@@ -2261,10 +2259,10 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sá»‘ Äiá»‡n Thoáº¡i</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Số Điện Thoại</label>
                 <input
                   type="text"
-                  placeholder="VÃ­ dá»¥: 0987654321"
+                  placeholder="Ví dụ: 0987654321"
                   value={newCustPhone}
                   onChange={(e) => setNewCustPhone(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono"
@@ -2272,10 +2270,10 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Äá»‹a Chá»‰ Giao HÃ ng</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Địa Chỉ Giao Hàng</label>
                 <input
                   type="text"
-                  placeholder="VÃ­ dá»¥: Quáº­n 12, ThÃ nh phá»‘ Há»“ ChÃ­ Minh"
+                  placeholder="Ví dụ: Quận 12, Thành phố Hồ Chí Minh"
                   value={newCustAddress}
                   onChange={(e) => setNewCustAddress(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
@@ -2283,10 +2281,10 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">MÃ£ Sá»‘ Thuáº¿ (Doanh nghiá»‡p)</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Mã Số Thuế (Doanh nghiệp)</label>
                 <input
                   type="text"
-                  placeholder="MÃ£ sá»‘ thuáº¿ doanh nghiá»‡p (náº¿u cÃ³)"
+                  placeholder="Mã số thuế doanh nghiệp (nếu có)"
                   value={newCustTaxId}
                   onChange={(e) => setNewCustTaxId(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono"
@@ -2299,13 +2297,13 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                   onClick={() => setShowNewCustModal(false)}
                   className="px-3 py-1.5 border border-slate-200 rounded text-xs font-semibold text-slate-500 hover:bg-slate-50"
                 >
-                  Há»§y
+                  Hủy
                 </button>
                 <button
                   type="submit"
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1"
                 >
-                  LÆ°u KhÃ¡ch HÃ ng
+                  Lưu Khách Hàng
                 </button>
               </div>
             </form>
@@ -2319,8 +2317,8 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
             <div className="p-4 border-b flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-800">Chá»n HÃ³a ÄÆ¡n Máº«u</h3>
-              <button onClick={() => setShowTemplateSelectionModal(false)} className="text-slate-500 hover:text-slate-700">ÄÃ³ng</button>
+              <h3 className="font-bold text-slate-800">Chọn Hóa Đơn Mẫu</h3>
+              <button onClick={() => setShowTemplateSelectionModal(false)} className="text-slate-500 hover:text-slate-700">Đóng</button>
             </div>
             <div className="p-4 overflow-y-auto">
               <div className="space-y-2">
@@ -2331,8 +2329,8 @@ export const InvoicesTab: React.FC<{ refreshTrigger: number; onInvoiceModified: 
                   }}
                   className="w-full text-left p-3 border-2 border-emerald-500 rounded-lg hover:bg-emerald-50 transition-colors"
                 >
-                  <div className="font-bold text-emerald-800">+ Phiáº¿u Tráº¯ng</div>
-                  <div className="text-xs text-emerald-600">Táº¡o hÃ³a Ä‘Æ¡n má»›i hoÃ n toÃ n</div>
+                  <div className="font-bold text-emerald-800">+ Phiếu Trắng</div>
+                  <div className="text-xs text-emerald-600">Tạo hóa đơn mới hoàn toàn</div>
                 </button>
               </div>
             </div>
