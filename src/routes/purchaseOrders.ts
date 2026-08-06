@@ -492,7 +492,7 @@ purchaseOrdersRouter.put("/purchase-orders/:id", requireAuth as any, async (req:
 
       const originalPoNumber = poNumber !== undefined ? (String(poNumber).trim() || "0") : existing.poNumber;
       const finalPoNumber = dateChanged ? updateCodeWithNewDate(originalPoNumber, newCreatedAt) : originalPoNumber;
-      
+
       await db.update(purchaseOrders)
         .set({
           poNumber: finalPoNumber,
@@ -835,14 +835,14 @@ purchaseOrdersRouter.post("/purchase-orders/:id/duplicate", requireAuth as any, 
     .leftJoin(products, eq(purchaseOrderItems.productId, products.id))
     .where(eq(purchaseOrderItems.poId, id));
     
-    let { documentCode, poNumber } = await generatePOCodes(existing.status);
+    let { documentCode, poNumber } = await generatePOCodes('CTT');
     poNumber = "0";
 
     const [newPO] = await db.insert(purchaseOrders).values({
       poNumber,
       documentCode,
       supplierId: existing.supplierId,
-      status: existing.status,
+      status: 'CTT',
       isRecorded: false,
       depositEnabled: existing.depositEnabled,
       totalAmount: existing.totalAmount,
