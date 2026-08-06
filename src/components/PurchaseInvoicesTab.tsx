@@ -13,6 +13,7 @@ import {
   Eye, CornerDownRight, Plus, Coins, Landmark, Clock, FileText, Check, ArrowRight, UserPlus,
   FileSpreadsheet
 } from 'lucide-react';
+
 export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseOrderModified: () => void }> = ({ refreshTrigger, onPurchaseOrderModified }) => {
   const { fetchWithAuth } = useAuth();
   
@@ -22,6 +23,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [printType, setPrintType] = useState<'standard' | 'vat' | 'delivery'>('standard');
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -35,12 +37,16 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
+
   // Detail view/Edit
   const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
+
   // ... (existing states)
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+
   // States for Editing PurchaseOrder
   const [isEditing, setIsEditing] = useState(false);
   const [isCreatingFromTemplate, setIsCreatingFromTemplate] = useState(false);
@@ -64,20 +70,25 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+
   // States for Quick Add Supplier in Edit mode
   const [showNewSuppModal, setShowNewSuppModal] = useState(false);
   const [newSuppName, setNewSuppName] = useState('');
   const [newSuppPhone, setNewSuppPhone] = useState('');
   const [newSuppAddress, setNewSuppAddress] = useState('');
   const [newSuppTaxId, setNewSuppTaxId] = useState('');
+
   // Deposit log popover
   const [showAddDeposit, setShowAddDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState(0);
   const [depositMethod, setDepositMethod] = useState<string>('CK');
   const [depositNote, setDepositNote] = useState('');
+
   // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; message: string; onConfirm: () => void } | null>(null);
+
   const currentFetchId = useRef(0);
+
   const loadPurchaseOrders = async () => {
     const fetchId = ++currentFetchId.current;
     setLoading(true);
@@ -90,6 +101,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       if (filterStartDate) params.append('startDate', filterStartDate);
       if (filterEndDate) params.append('endDate', filterEndDate);
       if (sortOrder) params.append('sort', sortOrder);
+
       const res = await fetchWithAuth(`/api/purchase-orders?${params.toString()}`);
       if (fetchId !== currentFetchId.current) return;
       if (res.ok) {
@@ -100,7 +112,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
         setTotalAmountSum(data.totalAmountSum || 0);
         setTotalInvoicesCount(data.total || 0);
       } else {
-        throw new Error("Không thể tải danh sách thống kê phiếu nhập");
+        throw new Error("KhÃ´ng thá»ƒ táº£i danh sÃ¡ch thá»‘ng kÃª phiáº¿u nháº­p");
       }
     } catch (err: any) {
       if (fetchId !== currentFetchId.current) return;
@@ -111,9 +123,11 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       }
     }
   };
+
   useEffect(() => {
     loadPurchaseOrders();
   }, [currentPage, searchTerm, filterStatus, filterRecorded, filterStartDate, filterEndDate, sortOrder, refreshTrigger]);
+
   useEffect(() => {
     const loadCacheData = async () => {
       try {
@@ -137,6 +151,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     };
     loadCacheData();
   }, []);
+
   useEffect(() => {
     const handleHash = () => {
       if (window.location.hash.startsWith('#doc=')) {
@@ -149,6 +164,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
+
   // Filter lists
   const filteredProducts = productsCache.filter(p => 
     (selectedWarehouseId ? p.warehouseId === selectedWarehouseId : false) &&
@@ -156,11 +172,13 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     searchMatch(p.code, productSearch) ||
     searchMatch(p.category, productSearch))
   );
+
   const filteredSuppliers = suppliersList.filter(c => 
     searchMatch(c.name, supplierSearch) ||
     (c.phone && c.phone.includes(supplierSearch)) ||
     (c.taxId && c.taxId.includes(supplierSearch))
   );
+
   const startEditing = () => {
     if (!selectedPurchaseOrder) return;
     const foundCust = suppliersList.find(c => c.id === selectedPurchaseOrder.supplierId) || null;
@@ -184,6 +202,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     setIsCreatingFromTemplate(false);
     setProductSearch('');
   };
+
   const handleAddEditItem = (product: Product) => {
     setEditItems([...editItems, {
       productId: product.id,
@@ -200,21 +219,25 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     setProductSearch('');
     setShowProductDropdown(false);
   };
+
   const handleRemoveEditItem = (index: number) => {
     const updated = [...editItems];
     updated.splice(index, 1);
     setEditItems(updated);
   };
+
   const handleUpdateEditProductName = (index: number, val: string) => {
     const updated = [...editItems];
     updated[index].productName = val;
     setEditItems(updated);
   };
+
   const handleUpdateEditUnit = (index: number, val: string) => {
     const updated = [...editItems];
     updated[index].unit = val;
     setEditItems(updated);
   };
+
   const handleUpdateEditQty = (index: number, val: number) => {
     const qty = Math.max(0, val);
     const updated = [...editItems];
@@ -222,6 +245,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     updated[index].totalPrice = qty * updated[index].price;
     setEditItems(updated);
   };
+
   const handleUpdateEditPrice = (index: number, val: number) => {
     const prc = Math.max(0, val);
     const updated = [...editItems];
@@ -229,6 +253,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     updated[index].totalPrice = updated[index].quantity * prc;
     setEditItems(updated);
   };
+
   const handleUpdateEditVat = (index: number, hasVat: boolean) => {
     const updated = [...editItems];
     updated[index].hasVat = hasVat;
@@ -237,21 +262,26 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     }
     setEditItems(updated);
   };
+
   const handleUpdateEditVatRate = (index: number, rate: number) => {
     const updated = [...editItems];
     updated[index].vatRate = Math.max(0, rate);
     setEditItems(updated);
   };
+
   const calculateEditTotal = () => {
     return editItems.reduce((acc, item) => acc + (item.quantity * item.price), 0);
   };
+
   const handleClearSupplier = () => {
     setEditSupplier(null);
     setSupplierSearch('');
   };
+
   const handleQuickAddSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSuppName.trim()) return;
+
     try {
       const res = await fetchWithAuth('/api/suppliers', {
         method: 'POST',
@@ -262,10 +292,12 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           taxId: newSuppTaxId.trim() || null
         })
       });
+
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Lỗi khi tạo mới nhà cung cấp");
+        throw new Error(errorData.error || "Lá»—i khi táº¡o má»›i nhÃ  cung cáº¥p");
       }
+
       const createdSupplier = await res.json();
       setEditSupplier(createdSupplier);
       setSupplierSearch(createdSupplier.name);
@@ -276,6 +308,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       setNewSuppPhone('');
       setNewSuppAddress('');
       setNewSuppTaxId('');
+
       // Refresh supplier list
       const freshRes = await fetchWithAuth('/api/suppliers');
       if (freshRes.ok) {
@@ -285,18 +318,21 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       alert(err.message);
     }
   };
+
   const handleSavePurchaseOrderEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPurchaseOrder) return;
     if (editItems.length === 0) {
-      alert("Phiếu nhập phải có ít nhất một vật tư.");
+      alert("Phiáº¿u nháº­p pháº£i cÃ³ Ã­t nháº¥t má»™t váº­t tÆ°.");
       return;
     }
+
     const hasInvalidQty = editItems.some(itm => itm.quantity <= 0);
     if (hasInvalidQty) {
-      alert("Số lượng của mỗi vật tư phải lớn hơn 0.");
+      alert("Sá»‘ lÆ°á»£ng cá»§a má»—i váº­t tÆ° pháº£i lá»›n hÆ¡n 0.");
       return;
     }
+
     setSavingEdit(true);
     setErrorMsg('');
     setSuccessMsg('');
@@ -328,19 +364,21 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           createdAt: dep.createdAt,
         })),
       };
+
       const res = await fetchWithAuth(`/api/purchase-orders/${selectedPurchaseOrder.id}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
       });
+
       if (res.ok) {
-        setSuccessMsg("Cập nhật phiếu nhập thành công!");
+        setSuccessMsg("Cáº­p nháº­t phiáº¿u nháº­p thÃ nh cÃ´ng!");
         setIsEditing(false);
         loadPurchaseOrders();
         viewPurchaseOrderDetail(selectedPurchaseOrder.id);
         onPurchaseOrderModified();
       } else {
         const data = await res.json();
-        throw new Error(data.error || "Không thể cập nhật phiếu nhập");
+        throw new Error(data.error || "KhÃ´ng thá»ƒ cáº­p nháº­t phiáº¿u nháº­p");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -348,6 +386,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       setSavingEdit(false);
     }
   };
+
   // Fetch full details
   const viewPurchaseOrderDetail = async (id: number) => {
     setDetailLoading(true);
@@ -358,7 +397,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
         const data = await res.json();
         setSelectedPurchaseOrder(data);
       } else {
-        throw new Error("Không thể lấy chi tiết phiếu nhập");
+        throw new Error("KhÃ´ng thá»ƒ láº¥y chi tiáº¿t phiáº¿u nháº­p");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -371,31 +410,15 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
   // Change payment status (Regenerates document code)
   const handleChangeStatus = async (id: number, newStatus: string) => {
     setErrorMsg('');
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -1016,14 +1050,62 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
-  
     setSuccessMsg('');
     try {
       const res = await fetchWithAuth(`/api/purchase-orders/${id}`, {
         method: 'PUT',
         body: JSON.stringify({ status: newStatus })
       });
+
       if (res.ok) {
-        setSuccessMsg("Cập nhật trạng thái và tự động thay đổi mã chứng từ thành công!");
+        setSuccessMsg("Cáº­p nháº­t tráº¡ng thÃ¡i vÃ  tá»± Ä‘á»™ng thay Ä‘á»•i mÃ£ chá»©ng tá»« thÃ nh cÃ´ng!");
         loadPurchaseOrders();
         if (showDetailModal && selectedPurchaseOrder?.id === id) {
           viewPurchaseOrderDetail(id); // Reload modal details
@@ -403,13 +426,14 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
         onPurchaseOrderModified();
       } else {
         const data = await res.json();
-        throw new Error(data.error || "Không thể cập nhật trạng thái");
+        throw new Error(data.error || "KhÃ´ng thá»ƒ cáº­p nháº­t tráº¡ng thÃ¡i");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
     }
   };
-  // Record/Ghi sổ purchaseOrder
+
+  // Record/Ghi sá»• purchaseOrder
   const handleRecordPurchaseOrder = async (id: number) => {
     setErrorMsg('');
     setSuccessMsg('');
@@ -417,12 +441,14 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       const res = await fetchWithAuth(`/api/purchase-orders/${id}/record`, {
         method: 'POST'
       });
+
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || "Ghi sổ thất bại");
+        throw new Error(errData.error || "Ghi sá»• tháº¥t báº¡i");
       }
+
       const result = await res.json();
-      setSuccessMsg(result.message || "Ghi sổ thành công!");
+      setSuccessMsg(result.message || "Ghi sá»• thÃ nh cÃ´ng!");
       loadPurchaseOrders();
       if (showDetailModal && selectedPurchaseOrder?.id === id) {
         viewPurchaseOrderDetail(id);
@@ -432,11 +458,12 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       setErrorMsg(err.message);
     }
   };
-  // Unrecord/Bỏ ghi sổ purchaseOrder
+
+  // Unrecord/Bá» ghi sá»• purchaseOrder
   const handleUnrecordPurchaseOrder = async (id: number) => {
     setConfirmDialog({
       isOpen: true,
-      message: "Bỏ ghi sổ sẽ hoàn trả lại vật tư vào kho và chuyển phiếu nhập về trạng thái chờ. Bạn có chắc chắn muốn bỏ ghi sổ?",
+      message: "Bá» ghi sá»• sáº½ hoÃ n tráº£ láº¡i váº­t tÆ° vÃ o kho vÃ  chuyá»ƒn phiáº¿u nháº­p vá» tráº¡ng thÃ¡i chá». Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n bá» ghi sá»•?",
       onConfirm: async () => {
         setConfirmDialog(null);
         setErrorMsg('');
@@ -445,12 +472,14 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           const res = await fetchWithAuth(`/api/purchase-orders/${id}/unrecord`, {
             method: 'POST'
           });
+
           if (!res.ok) {
             const errData = await res.json();
-            throw new Error(errData.error || "Bỏ ghi sổ thất bại");
+            throw new Error(errData.error || "Bá» ghi sá»• tháº¥t báº¡i");
           }
+
           const result = await res.json();
-          setSuccessMsg(result.message || "Bỏ ghi sổ thành công!");
+          setSuccessMsg(result.message || "Bá» ghi sá»• thÃ nh cÃ´ng!");
           loadPurchaseOrders();
           if (showDetailModal && selectedPurchaseOrder?.id === id) {
             viewPurchaseOrderDetail(id);
@@ -462,7 +491,8 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       }
     });
   };
-  // Duplicate PurchaseOrder (Nhân bản)
+
+  // Duplicate PurchaseOrder (NhÃ¢n báº£n)
   const handleDuplicatePurchaseOrder = async (id: number) => {
     setErrorMsg('');
     setSuccessMsg('');
@@ -470,19 +500,21 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       const res = await fetchWithAuth(`/api/purchase-orders/${id}/duplicate`, {
         method: 'POST'
       });
+
       if (res.ok) {
         const result = await res.json();
-        setSuccessMsg(`Nhân bản phiếu nhập nháp thành công! Đơn mới #${result.poNumber} đã được thêm vào Trang Chờ.`);
+        setSuccessMsg(`NhÃ¢n báº£n phiáº¿u nháº­p nhÃ¡p thÃ nh cÃ´ng! ÄÆ¡n má»›i #${result.poNumber} Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o Trang Chá».`);
         loadPurchaseOrders();
         onPurchaseOrderModified();
       } else {
         const errData = await res.json();
-        throw new Error(errData.error || "Nhân bản thất bại");
+        throw new Error(errData.error || "NhÃ¢n báº£n tháº¥t báº¡i");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
     }
   };
+
   const handleCreateFromTemplate = (inv: PurchaseOrder) => {
     // 1. Open Detail Modal
     setSelectedPurchaseOrder(inv);
@@ -518,6 +550,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     setIsCreatingFromTemplate(true);
     setProductSearch('');
   };
+
   const handleCreateBlankPurchaseOrder = () => {
     // 1. Prepare for Edit (Blank)
     setEditItems([]);
@@ -536,11 +569,12 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
     setSelectedPurchaseOrder(null); // No selected PO
     setShowDetailModal(true); // Open modal
   };
+
   // Delete PurchaseOrder
   const handleDeletePurchaseOrder = async (id: number) => {
     setConfirmDialog({
       isOpen: true,
-      message: "Bạn có chắc chắn muốn chuyển phiếu nhập này vào thùng rác?",
+      message: "Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n chuyá»ƒn phiáº¿u nháº­p nÃ y vÃ o thÃ¹ng rÃ¡c?",
       onConfirm: async () => {
         setConfirmDialog(null);
         setErrorMsg('');
@@ -549,14 +583,15 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           const res = await fetchWithAuth(`/api/purchase-orders/${id}`, {
             method: 'DELETE'
           });
+
           if (res.ok) {
-            setSuccessMsg("Đã chuyển phiếu nhập vào thùng rác!");
+            setSuccessMsg("ÄÃ£ chuyá»ƒn phiáº¿u nháº­p vÃ o thÃ¹ng rÃ¡c!");
             setShowDetailModal(false);
             loadPurchaseOrders();
             onPurchaseOrderModified();
           } else {
             const errData = await res.json();
-            throw new Error(errData.error || "Xóa phiếu nhập thất bại");
+            throw new Error(errData.error || "XÃ³a phiáº¿u nháº­p tháº¥t báº¡i");
           }
         } catch (err: any) {
           setErrorMsg(err.message);
@@ -564,12 +599,14 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       }
     });
   };
+
   // Add Deposit payment
   const handleAddDepositPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPurchaseOrder || depositAmount <= 0) return;
     setErrorMsg('');
     setSuccessMsg('');
+
     try {
       const finalDepositMethod = depositMethod === 'CK' && selectedDepositBankAccount ? `CK - ${selectedDepositBankAccount}` : depositMethod;
       const res = await fetchWithAuth(`/api/purchase-orders/${selectedPurchaseOrder.id}/deposits`, {
@@ -580,46 +617,51 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           note: depositNote.trim()
         })
       });
+
       if (res.ok) {
-        setSuccessMsg(`Đã nhận cọc thêm ${formatVND(depositAmount)} đ thành công!`);
+        setSuccessMsg(`ÄÃ£ nháº­n cá»c thÃªm ${formatVND(depositAmount)} Ä‘ thÃ nh cÃ´ng!`);
         setShowAddDeposit(false);
         setDepositAmount(0);
         setDepositNote('');
         viewPurchaseOrderDetail(selectedPurchaseOrder.id); // reload
       } else {
         const errData = await res.json();
-        throw new Error(errData.error || "Ghi nhận cọc thất bại");
+        throw new Error(errData.error || "Ghi nháº­n cá»c tháº¥t báº¡i");
       }
     } catch (err: any) {
       setErrorMsg(err.message);
     }
   };
+
   // Helper for status styling
   const getStatusBadge = (status: string) => {
     if (status === 'CTT') {
-      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-red-700 border border-red-200">CHƯA THANH TOÁN</span>;
+      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-red-50 text-red-700 border border-red-200">CHÆ¯A THANH TOÃN</span>;
     }
     if (status === 'TM') {
-      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">TIỀN MẶT</span>;
+      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">TIá»€N Máº¶T</span>;
     }
     if (status === 'CK' || (status && status.startsWith('CK'))) {
-      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-700 border border-blue-200">CHUYỂN KHOẢN</span>;
+      return <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-700 border border-blue-200">CHUYá»‚N KHOáº¢N</span>;
     }
     return null;
   };
+
   // Custom print handler
   const handlePrint = () => {
     const printContent = document.getElementById('printable_purchaseOrder_area');
     if (!printContent) return;
+
     const originalContent = document.body.innerHTML;
     const originalHead = document.head.innerHTML;
+
     // Open a simple print view
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
         <html>
           <head>
-            <title>In phiếu nhập</title>
+            <title>In phiáº¿u nháº­p</title>
             <style>
               body { font-family: sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
               .font-mono { font-family: monospace; }
@@ -651,13 +693,14 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
       printWindow.close();
     }
   };
+
   return (
     <div id="purchase-orders_container" className="space-y-3">
       
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="font-display text-base font-bold tracking-tight text-slate-900">Sổ Thống Kê Phiếu Nhập</h1>
-          <p className="text-xs text-slate-500">Xem báo cáo, sao chép, in ấn và quản lý trạng thái nhập kho ghi sổ</p>
+          <h1 className="font-display text-base font-bold tracking-tight text-slate-900">Sá»• Thá»‘ng KÃª Phiáº¿u Nháº­p</h1>
+          <p className="text-xs text-slate-500">Xem bÃ¡o cÃ¡o, sao chÃ©p, in áº¥n vÃ  quáº£n lÃ½ tráº¡ng thÃ¡i nháº­p kho ghi sá»•</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -667,7 +710,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                 const res = await fetchWithAuth('/api/purchase-orders/create-blank', {
                   method: 'POST',
                 });
-                if (!res.ok) throw new Error("Không thể tạo phiếu nhập mới");
+                if (!res.ok) throw new Error("KhÃ´ng thá»ƒ táº¡o phiáº¿u nháº­p má»›i");
                 loadPurchaseOrders();
                 onPurchaseOrderModified();
               } catch (err: any) {
@@ -679,10 +722,11 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
             className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-md hover:bg-emerald-700 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            Tạo Phiếu Nhập Mới
+            Táº¡o Phiáº¿u Nháº­p Má»›i
           </button>
         </div>
       </div>
+
       <CreatePurchaseOrderModal 
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)}
@@ -691,18 +735,21 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
             onPurchaseOrderModified();
         }}
       />
+
       {errorMsg && (
         <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md flex items-start gap-1.5 whitespace-pre-line">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <div>{errorMsg}</div>
         </div>
       )}
+
       {successMsg && (
         <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-md flex items-start gap-1.5">
           <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
           <div>{successMsg}</div>
         </div>
       )}
+
       {/* Query Filters */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-xs p-2.5 flex flex-col xl:flex-row gap-3 items-stretch xl:items-center justify-between">
         
@@ -710,7 +757,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Tìm theo mã chứng từ, số phiếu nhập, nhà cung cấp..."
+            placeholder="TÃ¬m theo mÃ£ chá»©ng tá»«, sá»‘ phiáº¿u nháº­p, nhÃ  cung cáº¥p..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -720,10 +767,11 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
             className="pl-8 pr-3 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:text-slate-400"
           />
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
           {/* Date range inputs */}
           <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Từ</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Tá»«</span>
             <input
               type="date"
               value={filterStartDate}
@@ -733,7 +781,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
               }}
               className="px-1.5 py-0.5 text-xs text-slate-700 bg-transparent border-0 focus:outline-none"
             />
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Đến</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Äáº¿n</span>
             <input
               type="date"
               value={filterEndDate}
@@ -744,6 +792,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
               className="px-1.5 py-0.5 text-xs text-slate-700 bg-transparent border-0 focus:outline-none"
             />
           </div>
+
           <select
             value={filterStatus}
             onChange={(e) => {
@@ -752,11 +801,12 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
             }}
             className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-md focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">-- Trạng thái thanh toán --</option>
-            <option value="CTT">Chưa thanh toán</option>
-            <option value="TM">Tiền mặt</option>
-            <option value="CK">Chuyển khoản</option>
+            <option value="">-- Tráº¡ng thÃ¡i thanh toÃ¡n --</option>
+            <option value="CTT">ChÆ°a thanh toÃ¡n</option>
+            <option value="TM">Tiá»n máº·t</option>
+            <option value="CK">Chuyá»ƒn khoáº£n</option>
           </select>
+
           <select
             value={filterRecorded}
             onChange={(e) => {
@@ -765,9 +815,9 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
             }}
             className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-md focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">-- Trạng thái ghi sổ --</option>
-            <option value="true">Đã ghi sổ (Cộng kho)</option>
-            <option value="false">Chưa ghi sổ (Lưu nháp)</option>
+            <option value="">-- Tráº¡ng thÃ¡i ghi sá»• --</option>
+            <option value="true">ÄÃ£ ghi sá»• (Cá»™ng kho)</option>
+            <option value="false">ChÆ°a ghi sá»• (LÆ°u nhÃ¡p)</option>
           </select>
           <select
             value={sortOrder}
@@ -777,9 +827,10 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
             }}
             className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-md focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="desc">Mới nhất tới cũ nhất</option>
-            <option value="asc">Cũ nhất tới mới nhất</option>
+            <option value="desc">Má»›i nháº¥t tá»›i cÅ© nháº¥t</option>
+            <option value="asc">CÅ© nháº¥t tá»›i má»›i nháº¥t</option>
           </select>
+
           {(filterStatus || filterRecorded || searchTerm || filterStartDate || filterEndDate) && (
             <button
               onClick={() => {
@@ -793,25 +844,26 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
               className="px-2.5 py-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover:underline cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" />
-              <span>Reset bộ lọc</span>
+              <span>Reset bá»™ lá»c</span>
             </button>
           )}
         </div>
       </div>
+
       {/* Structured Table List */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                <th className="px-3 py-2.5">Tên NCC</th>
-                <th className="px-3 py-2.5">Mã số thuế</th>
-                <th className="px-3 py-2.5">Số chứng từ</th>
-                <th className="px-3 py-2.5">Số Phiếu nhập</th>
-                <th className="px-3 py-2.5">Ngày</th>
-                <th className="px-3 py-2.5 text-right">Thành tiền</th>
-                <th className="px-3 py-2.5">Trạng thái</th>
-                <th className="px-3 py-2.5 text-center">Chức Năng</th>
+                <th className="px-3 py-2.5">TÃªn NCC</th>
+                <th className="px-3 py-2.5">MÃ£ sá»‘ thuáº¿</th>
+                <th className="px-3 py-2.5">Sá»‘ chá»©ng tá»«</th>
+                <th className="px-3 py-2.5">Sá»‘ Phiáº¿u nháº­p</th>
+                <th className="px-3 py-2.5">NgÃ y</th>
+                <th className="px-3 py-2.5 text-right">ThÃ nh tiá»n</th>
+                <th className="px-3 py-2.5">Tráº¡ng thÃ¡i</th>
+                <th className="px-3 py-2.5 text-center">Chá»©c NÄƒng</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
@@ -819,13 +871,13 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                 <tr>
                   <td colSpan={8} className="px-3 py-8 text-center text-slate-400">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-1.5 text-indigo-500" />
-                    <span className="text-xs font-semibold">Đang tải danh sách phiếu nhập...</span>
+                    <span className="text-xs font-semibold">Äang táº£i danh sÃ¡ch phiáº¿u nháº­p...</span>
                   </td>
                 </tr>
               ) : purchaseOrderList.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-3 py-8 text-center text-slate-400 font-semibold">
-                    Không tìm thấy phiếu nhập nào trong cơ sở dữ liệu.
+                    KhÃ´ng tÃ¬m tháº¥y phiáº¿u nháº­p nÃ o trong cÆ¡ sá»Ÿ dá»¯ liá»‡u.
                   </td>
                 </tr>
               ) : (
@@ -838,10 +890,10 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                   >
                     <td className="px-3 py-2.5 font-semibold text-slate-900">
                       <div>
-                        {inv.supplierName || 'Vãng lai'}
+                        {inv.supplierName || 'VÃ£ng lai'}
                       </div>
                       {inv.supplierPhone && (
-                        <div className="text-[10px] text-slate-400 font-mono">SĐT: {inv.supplierPhone}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">SÄT: {inv.supplierPhone}</div>
                       )}
                     </td>
                     <td className="px-3 py-2.5 font-mono text-slate-500">
@@ -857,7 +909,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       {inv.createdAt ? new Date(inv.createdAt).toLocaleString('vi-VN') : ''}
                     </td>
                     <td className="px-3 py-2.5 text-right font-mono font-black text-indigo-600">
-                      {formatVND(inv.depositEnabled ? Number(inv.totalAmount || 0) - Number(inv.totalDeposits || 0) : Number(inv.totalAmount || 0))} đ
+                      {formatVND(inv.depositEnabled ? Number(inv.totalAmount || 0) - Number(inv.totalDeposits || 0) : Number(inv.totalAmount || 0))} Ä‘
                     </td>
                     <td className="px-3 py-2.5 space-y-1">
                       <div className="flex flex-wrap items-center gap-1">
@@ -869,35 +921,37 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                         <button
                           onClick={() => viewPurchaseOrderDetail(inv.id)}
                           className="p-1 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors flex items-center gap-0.5 text-[11px] font-bold cursor-pointer"
-                          title="Xem chi tiết & logs"
+                          title="Xem chi tiáº¿t & logs"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Xem</span>
                         </button>
+
                         <button
                           onClick={() => handleDuplicatePurchaseOrder(inv.id)}
                           className="p-1 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors flex items-center gap-0.5 text-[11px] font-bold cursor-pointer"
-                          title="Nhân bản phiếu nhập này"
+                          title="NhÃ¢n báº£n phiáº¿u nháº­p nÃ y"
                         >
                           <Copy className="w-3.5 h-3.5" />
-                          <span>Nhân bản</span>
+                          <span>NhÃ¢n báº£n</span>
                         </button>
+
                         {/* Toggle Recording (Post/Unpost) */}
                         {inv.isRecorded ? (
                           <button
                             onClick={() => handleUnrecordPurchaseOrder(inv.id)}
                             className="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 text-[11px] font-bold rounded border border-amber-200 transition-colors cursor-pointer"
-                            title="Bỏ ghi sổ hoàn trả lại hàng vào kho"
+                            title="Bá» ghi sá»• hoÃ n tráº£ láº¡i hÃ ng vÃ o kho"
                           >
-                            Bỏ Ghi Sổ
+                            Bá» Ghi Sá»•
                           </button>
                         ) : (
                           <button
                             onClick={() => handleRecordPurchaseOrder(inv.id)}
                             className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded transition-colors cursor-pointer"
-                            title="Ghi sổ cộng kho thiết bị"
+                            title="Ghi sá»• cá»™ng kho thiáº¿t bá»‹"
                           >
-                            Ghi Sổ
+                            Ghi Sá»•
                           </button>
                         )}
                       </div>
@@ -911,7 +965,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                 <td colSpan={5} className="px-3 py-3 text-left">
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-indigo-700 font-bold uppercase tracking-wider text-[10px]">Tổng số phiếu đã lọc:</span>
+                      <span className="text-indigo-700 font-bold uppercase tracking-wider text-[10px]">Tá»•ng sá»‘ phiáº¿u Ä‘Ã£ lá»c:</span>
                       <span className="font-mono font-black text-indigo-700 text-xs">{totalInvoicesCount}</span>
                     </div>
                   </div>
@@ -919,8 +973,8 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                 <td className="px-3 py-3 text-right">
                   <div className="flex flex-col items-end gap-1.5">
                     <div className="bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-100 flex flex-col items-end shrink-0">
-                      <span className="text-indigo-700 font-bold uppercase tracking-wider text-[9px] whitespace-nowrap">Tổng tiền được lọc:</span>
-                      <span className="font-mono font-black text-indigo-700 text-sm whitespace-nowrap">{formatVND(totalAmountSum)} đ</span>
+                      <span className="text-indigo-700 font-bold uppercase tracking-wider text-[9px] whitespace-nowrap">Tá»•ng tiá»n Ä‘Æ°á»£c lá»c:</span>
+                      <span className="font-mono font-black text-indigo-700 text-sm whitespace-nowrap">{formatVND(totalAmountSum)} Ä‘</span>
                     </div>
                   </div>
                 </td>
@@ -930,6 +984,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           </table>
         </div>
       </div>
+
       {/* Pagination component */}
       {totalPages > 1 && (
         <div className="flex justify-start items-center gap-2 pt-2.5 border-t border-slate-200">
@@ -944,6 +999,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           <span className="text-sm font-semibold text-slate-600">
             Trang {currentPage} / {totalPages}
           </span>
+
           <button
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
@@ -953,6 +1009,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
           </button>
         </div>
       )}
+
       {/* Detailed View / Audit Logs & Edit Modal */}
       {(showDetailModal && (selectedPurchaseOrder || isEditing)) && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -960,27 +1017,16 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
             <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="font-display font-semibold text-slate-800 text-lg">
-                  {isEditing ? (isCreatingFromTemplate ? "Tạo Phiếu Nhập Mới" : "Chỉnh Sửa Phiếu Nhập") : "Hồ Sơ Phiếu Nhập Chi Tiết"}
+                  {isEditing ? (isCreatingFromTemplate ? "Táº¡o Phiáº¿u Nháº­p Má»›i" : "Chá»‰nh Sá»­a Phiáº¿u Nháº­p") : "Há»“ SÆ¡ Phiáº¿u Nháº­p Chi Tiáº¿t"}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {isEditing 
-                    ? "Cập nhật vật tư, đơn giá, số lượng và đối tác trước khi ghi sổ" 
-                    : `Số: ${selectedPurchaseOrder?.poNumber} • Chứng từ: ${selectedPurchaseOrder?.documentCode}`}
+                    ? "Cáº­p nháº­t váº­t tÆ°, Ä‘Æ¡n giÃ¡, sá»‘ lÆ°á»£ng vÃ  Ä‘á»‘i tÃ¡c trÆ°á»›c khi ghi sá»•" 
+                    : `Sá»‘: ${selectedPurchaseOrder?.poNumber} â€¢ Chá»©ng tá»«: ${selectedPurchaseOrder?.documentCode}`}
                 </p>
               </div>
               <button 
                 onClick={() => {
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -1032,7 +1114,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
-  
                   setShowDetailModal(false);
                   setSelectedPurchaseOrder(null);
                   setIsEditing(false);
@@ -988,30 +1034,14 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                 }} 
                 className="text-slate-400 hover:text-slate-600 text-xl"
               >
-                ×
+                Ã—
               </button>
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -1983,6 +2065,28 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
-  
             </div>
+
             {detailLoading ? (
               <div className="p-12 text-center text-slate-400">
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-500" />
-                <span>Đang tải thông tin...</span>
+                <span>Äang táº£i thÃ´ng tin...</span>
               </div>
             ) : isEditing ? (
               <div className="p-6 max-h-[85vh] overflow-y-auto">
@@ -1023,23 +1053,25 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       <div>{errorMsg}</div>
                     </div>
                   )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Basic PurchaseOrder fields */}
                     <div className="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Thông Tin Chung</h4>
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">ThÃ´ng Tin Chung</h4>
                       
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Số phiếu nhập</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Sá»‘ phiáº¿u nháº­p</label>
                         <input
                           type="text"
-                          placeholder="Để trống sẽ mặc định là 0"
+                          placeholder="Äá»ƒ trá»‘ng sáº½ máº·c Ä‘á»‹nh lÃ  0"
                           value={editPurchaseOrderNumber}
                           onChange={(e) => setEditPurchaseOrderNumber(e.target.value)}
                           className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-semibold"
                         />
                       </div>
+
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Ngày tạo phiếu nhập</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">NgÃ y táº¡o phiáº¿u nháº­p</label>
                         <input
                           type="datetime-local"
                           value={editCreatedAt}
@@ -1047,27 +1079,29 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                           className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-semibold"
                         />
                       </div>
+
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Hình thức thanh toán</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">HÃ¬nh thá»©c thanh toÃ¡n</label>
                         <select
                           value={editStatus}
                           onChange={(e: any) => setEditStatus(e.target.value)}
                           className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-semibold"
                         >
-                          <option value="CTT">Chưa thanh toán</option>
-                          <option value="TM">Tiền mặt</option>
-                          <option value="CK">Chuyển khoản</option>
+                          <option value="CTT">ChÆ°a thanh toÃ¡n</option>
+                          <option value="TM">Tiá»n máº·t</option>
+                          <option value="CK">Chuyá»ƒn khoáº£n</option>
                         </select>
                       </div>
+
                       {editStatus === 'CK' && (
                         <div>
-                          <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Tài khoản nhận</label>
+                          <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">TÃ i khoáº£n nháº­n</label>
                           <select
                             value={editBankAccountId}
                             onChange={(e) => setEditBankAccountId(e.target.value)}
                             className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-semibold"
                           >
-                            <option value="">-- Chọn tài khoản --</option>
+                            <option value="">-- Chá»n tÃ i khoáº£n --</option>
                             {bankAccounts.map(b => (
                               <option key={b.id} value={b.id}>
                                 {b.bankName} - {b.accountNumber} ({b.accountName})
@@ -1076,6 +1110,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                           </select>
                         </div>
                       )}
+
                       <div className="flex items-center gap-2 pt-1">
                         <input
                           type="checkbox"
@@ -1085,17 +1120,18 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                           className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded animate-none"
                         />
                         <label htmlFor="edit_deposit_enabled" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                          Kích hoạt thanh toán nhiều lần
+                          KÃ­ch hoáº¡t thanh toÃ¡n nhiá»u láº§n
                         </label>
                       </div>
                     </div>
+
                     {/* Supplier search field */}
                     <div className="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 relative">
-                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Khách Hàng / Đối Tác</h4>
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">KhÃ¡ch HÃ ng / Äá»‘i TÃ¡c</h4>
                       
                       <div className="relative">
                         <div className="flex justify-between items-center mb-1">
-                          <label className="block text-[10px] text-slate-500 font-semibold uppercase">Tìm kiếm nhà cung cấp</label>
+                          <label className="block text-[10px] text-slate-500 font-semibold uppercase">TÃ¬m kiáº¿m nhÃ  cung cáº¥p</label>
                           <button
                             type="button"
                             onClick={() => {
@@ -1104,14 +1140,14 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                             }}
                             className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
                           >
-                            <UserPlus className="w-2.5 h-2.5" /> Thêm mới
+                            <UserPlus className="w-2.5 h-2.5" /> ThÃªm má»›i
                           </button>
                         </div>
                         <div className="relative">
                           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                           <input
                             type="text"
-                            placeholder="Nhập tên, số điện thoại hoặc MST..."
+                            placeholder="Nháº­p tÃªn, sá»‘ Ä‘iá»‡n thoáº¡i hoáº·c MST..."
                             value={supplierSearch}
                             onChange={(e) => {
                               setSupplierSearch(e.target.value);
@@ -1126,10 +1162,11 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                               onClick={handleClearSupplier}
                               className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-sm font-bold"
                             >
-                              ×
+                              Ã—
                             </button>
                           )}
                         </div>
+
                         {showSupplierDropdown && (
                           <>
                             <div className="fixed inset-0 z-40" onClick={() => setShowSupplierDropdown(false)} />
@@ -1143,18 +1180,18 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                   }}
                                   className="p-2 text-xs text-indigo-600 hover:bg-indigo-50 cursor-pointer font-bold flex items-center gap-1 border-b border-indigo-50"
                                 >
-                                  <Plus className="w-3.5 h-3.5" /> + Tạo mới: "{supplierSearch}"
+                                  <Plus className="w-3.5 h-3.5" /> + Táº¡o má»›i: "{supplierSearch}"
                                 </div>
                               )}
                               <div 
                                 onClick={() => {
                                   setEditSupplier(null);
-                                  setSupplierSearch('Nhà cung cấp vãng lai');
+                                  setSupplierSearch('NhÃ  cung cáº¥p vÃ£ng lai');
                                   setShowSupplierDropdown(false);
                                 }}
                                 className="p-2 text-xs text-slate-500 hover:bg-indigo-50 cursor-pointer font-semibold"
                               >
-                                -- Nhà cung cấp vãng lai --
+                                -- NhÃ  cung cáº¥p vÃ£ng lai --
                               </div>
                               {filteredSuppliers.map((cust) => (
                                 <div
@@ -1171,42 +1208,46 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                 </div>
                               ))}
                               {filteredSuppliers.length === 0 && (
-                                <div className="p-2 text-xs text-slate-400 italic">Không tìm thấy nhà cung cấp nào.</div>
+                                <div className="p-2 text-xs text-slate-400 italic">KhÃ´ng tÃ¬m tháº¥y nhÃ  cung cáº¥p nÃ o.</div>
                               )}
                             </div>
                           </>
                         )}
                       </div>
+
                       {editSupplier && (
                         <div className="p-2.5 bg-white rounded border text-xs space-y-1">
                           <div className="font-bold text-slate-800">{editSupplier.name}</div>
-                          {editSupplier.phone && <div className="text-slate-500 font-mono">SĐT: {editSupplier.phone}</div>}
-                          {editSupplier.address && <div className="text-slate-400 text-[11px] leading-tight">ĐC: {editSupplier.address}</div>}
+                          {editSupplier.phone && <div className="text-slate-500 font-mono">SÄT: {editSupplier.phone}</div>}
+                          {editSupplier.address && <div className="text-slate-400 text-[11px] leading-tight">ÄC: {editSupplier.address}</div>}
                         </div>
                       )}
                     </div>
                   </div>
+
                   {/* Product Search & Items List */}
                   <div className="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Danh Sách Thiết Bị / Vật Tư</h4>
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Danh SÃ¡ch Thiáº¿t Bá»‹ / Váº­t TÆ°</h4>
+
                     {/* Product Autocomplete Input */}
                     <div className="relative">
                       <div className="flex gap-2 mb-1">
                         <div className="flex-1">
-                          <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Thêm thiết bị vào phiếu nhập</label>
+                          <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">ThÃªm thiáº¿t bá»‹ vÃ o phiáº¿u nháº­p</label>
                         </div>
                         <div className="w-1/3">
                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Chọn Kho (Bắt buộc)
+                            Chá»n Kho (Báº¯t buá»™c)
                           </label>
                         </div>
                       </div>
+
                       <div className="flex gap-2 relative">
                         <div className="relative flex-1">
                           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                           <input
                             type="text"
-                            placeholder={selectedWarehouseId ? "Tìm theo tên vật tư, mã thiết bị, danh mục..." : "Vui lòng chọn kho trước để tìm kiếm..."}
+                            placeholder={selectedWarehouseId ? "TÃ¬m theo tÃªn váº­t tÆ°, mÃ£ thiáº¿t bá»‹, danh má»¥c..." : "Vui lÃ²ng chá»n kho trÆ°á»›c Ä‘á»ƒ tÃ¬m kiáº¿m..."}
                             value={productSearch}
                             onChange={(e) => {
                               setProductSearch(e.target.value);
@@ -1225,11 +1266,12 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                             onChange={(e) => setSelectedWarehouseId(e.target.value ? Number(e.target.value) : null)}
                             className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold text-slate-800"
                           >
-                            <option value="">-- Chọn Kho --</option>
+                            <option value="">-- Chá»n Kho --</option>
                             {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                           </select>
                         </div>
                       </div>
+
                       {showProductDropdown && (
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setShowProductDropdown(false)} />
@@ -1246,31 +1288,32 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                               >
                                 <div>
                                   <div className="font-normal text-[#373737] text-[11px]">{prod.name}</div>
-                                  <div className="text-[12px] text-black font-mono">Mã: {prod.code} | Kho: {prod.warehouseName} | Tồn: {formatQuantity(prod.quantity)} {prod.unit || 'chiếc'}</div>
+                                  <div className="text-[12px] text-black font-mono">MÃ£: {prod.code} | Kho: {prod.warehouseName} | Tá»“n: {formatQuantity(prod.quantity)} {prod.unit || 'chiáº¿c'}</div>
                                 </div>
                                 <span className="text-indigo-600 font-mono text-xs font-bold">
-                                  {formatVND(prod.price)} đ
+                                  {formatVND(prod.price)} Ä‘
                                 </span>
                               </div>
                             )})}
                             {filteredProducts.length === 0 && (
-                              <div className="p-2 text-xs text-slate-400 italic">Không tìm thấy thiết bị nào phù hợp.</div>
+                              <div className="p-2 text-xs text-slate-400 italic">KhÃ´ng tÃ¬m tháº¥y thiáº¿t bá»‹ nÃ o phÃ¹ há»£p.</div>
                             )}
                           </div>
                         </>
                       )}
                     </div>
+
                     {/* Selected items table/list */}
                     <div className="border bg-white rounded-md overflow-hidden max-h-64 overflow-y-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
                           <tr className="bg-slate-100 text-slate-600 font-bold">
-                            <th className="py-2 px-3">Tên Vật Tư / Thiết Bị</th>
-                            <th className="py-2 px-3 text-center w-16">ĐVT</th>
-                            <th className="py-2 px-3 text-center w-24">Số Lượng</th>
-                            <th className="py-2 px-3 text-right w-32">Đơn Giá (đ)</th>
-                            <th className="py-2 px-3 text-right w-32">Thành Tiền</th>
-                            <th className="py-2 px-3 text-center w-12">×</th>
+                            <th className="py-2 px-3">TÃªn Váº­t TÆ° / Thiáº¿t Bá»‹</th>
+                            <th className="py-2 px-3 text-center w-16">ÄVT</th>
+                            <th className="py-2 px-3 text-center w-24">Sá»‘ LÆ°á»£ng</th>
+                            <th className="py-2 px-3 text-right w-32">ÄÆ¡n GiÃ¡ (Ä‘)</th>
+                            <th className="py-2 px-3 text-right w-32">ThÃ nh Tiá»n</th>
+                            <th className="py-2 px-3 text-center w-12">Ã—</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
@@ -1279,7 +1322,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                             const preVatTotal = item.hasVat && item.vatRate ? (baseTotal / (1 + item.vatRate / 100)) : baseTotal;
                             
                             const w = warehouses.find(wh => wh.id === item.warehouseId);
-                            const wName = w ? w.name : 'Chưa chọn kho';
+                            const wName = w ? w.name : 'ChÆ°a chá»n kho';
                             
                             return (
                               <tr key={idx}>
@@ -1288,7 +1331,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                     type="text"
                                     value={item.productName || ''}
                                     onChange={(e) => handleUpdateEditProductName(idx, e.target.value)}
-                                    placeholder="Tên vật tư / thiết bị..."
+                                    placeholder="TÃªn váº­t tÆ° / thiáº¿t bá»‹..."
                                     className="w-full px-2 py-1 border font-normal text-slate-800 bg-slate-50 focus:bg-white rounded text-xs outline-none focus:ring-1 focus:ring-indigo-500 mb-1"
                                   />
                                   <div className="flex items-center gap-2 mt-0.5">
@@ -1301,7 +1344,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                     type="text"
                                     value={item.unit || ''}
                                     onChange={(e) => handleUpdateEditUnit(idx, e.target.value)}
-                                    placeholder="ĐVT..."
+                                    placeholder="ÄVT..."
                                     className="w-full px-1.5 py-0.5 border text-center font-semibold text-slate-800 bg-slate-50 focus:bg-white rounded text-xs font-mono"
                                   />
                                 </td>
@@ -1322,7 +1365,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                 </td>
                                 <td className="py-2 px-3 text-right align-top">
                                   <div className="font-mono font-bold text-slate-900 mb-1">
-                                    {formatVND(item.totalPrice)} đ
+                                    {formatVND(item.totalPrice)} Ä‘
                                   </div>
                                   <div className="flex items-center justify-end gap-2 mb-1">
                                     <label className="flex items-center gap-1 cursor-pointer">
@@ -1350,7 +1393,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                   </div>
                                   {item.hasVat && (
                                     <div className="text-[9px] font-mono text-slate-500 whitespace-nowrap">
-                                      Trước VAT: {formatVND(preVatTotal)} đ
+                                      TrÆ°á»›c VAT: {formatVND(preVatTotal)} Ä‘
                                     </div>
                                   )}
                                 </td>
@@ -1369,36 +1412,38 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                           {editItems.length === 0 && (
                             <tr>
                               <td colSpan={5} className="py-8 text-center text-slate-400 italic">
-                                Chưa có vật tư nào được chọn. Hãy dùng ô tìm kiếm ở trên để thêm thiết bị.
+                                ChÆ°a cÃ³ váº­t tÆ° nÃ o Ä‘Æ°á»£c chá»n. HÃ£y dÃ¹ng Ã´ tÃ¬m kiáº¿m á»Ÿ trÃªn Ä‘á»ƒ thÃªm thiáº¿t bá»‹.
                               </td>
                             </tr>
                           )}
                         </tbody>
                       </table>
                     </div>
+
                     {/* Total math */}
                     <div className="flex flex-col items-end gap-1 border-t border-slate-200 pt-3">
                       <div className="flex justify-between items-center w-full max-w-xs text-right">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">Tổng thành tiền (trước VAT):</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Tá»•ng thÃ nh tiá»n (trÆ°á»›c VAT):</span>
                         <span className="text-xs font-mono text-slate-600">
-                          {formatVND(editItems.reduce((acc, item) => acc + (item.hasVat && item.vatRate ? ((item.quantity * item.price) / (1 + item.vatRate / 100)) : item.quantity * item.price), 0))} đ
+                          {formatVND(editItems.reduce((acc, item) => acc + (item.hasVat && item.vatRate ? ((item.quantity * item.price) / (1 + item.vatRate / 100)) : item.quantity * item.price), 0))} Ä‘
                         </span>
                       </div>
                       <div className="flex justify-between items-center w-full max-w-xs text-right">
-                        <span className="text-xs font-bold text-slate-800 uppercase">Tổng cộng tiền hàng:</span>
+                        <span className="text-xs font-bold text-slate-800 uppercase">Tá»•ng cá»™ng tiá»n hÃ ng:</span>
                         <span className="text-sm font-black text-indigo-600 font-mono">
-                          {formatVND(calculateEditTotal())} đ
+                          {formatVND(calculateEditTotal())} Ä‘
                         </span>
                       </div>
                     </div>
                   </div>
+
                   {/* Deposits Editing Section */}
                   {editDepositEnabled && (
                     <div className="space-y-3 bg-emerald-50/50 p-3.5 rounded-lg border border-emerald-200">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1.5">
                           <Coins className="w-4 h-4 text-emerald-600" />
-                          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Thông Tin Thanh Toán (Đợt thanh toán)</h4>
+                          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">ThÃ´ng Tin Thanh ToÃ¡n (Äá»£t thanh toÃ¡n)</h4>
                         </div>
                         <button
                           type="button"
@@ -1408,24 +1453,25 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                               poId: selectedPurchaseOrder?.id || 0,
                               amount: 0,
                               paymentMethod: 'CK',
-                              note: `Thanh toán lần thứ ${editDeposits.length + 1}`,
+                              note: `Thanh toÃ¡n láº§n thá»© ${editDeposits.length + 1}`,
                               createdAt: new Date().toISOString()
                             }]);
                           }}
                           className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold flex items-center gap-1 shrink-0 transition-colors"
                         >
-                          <Plus className="w-3 h-3" /> Thêm đợt thanh toán
+                          <Plus className="w-3 h-3" /> ThÃªm Ä‘á»£t thanh toÃ¡n
                         </button>
                       </div>
+
                       {editDeposits.length === 0 ? (
-                        <p className="text-xs text-slate-400 italic">Chưa có thông tin thanh toán nào được ghi nhận cho phiếu nhập này.</p>
+                        <p className="text-xs text-slate-400 italic">ChÆ°a cÃ³ thÃ´ng tin thanh toÃ¡n nÃ o Ä‘Æ°á»£c ghi nháº­n cho phiáº¿u nháº­p nÃ y.</p>
                       ) : (
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {editDeposits.map((dep, dIdx) => (
                             <div key={dIdx} className="bg-white p-2 border border-slate-200 rounded-md flex flex-wrap md:flex-nowrap gap-2 items-center justify-between">
-                              <span className="text-xs font-bold text-slate-500">Đợt {dIdx + 1}</span>
+                              <span className="text-xs font-bold text-slate-500">Äá»£t {dIdx + 1}</span>
                               <div className="flex-1 min-w-[120px]">
-                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Số tiền thanh toán</label>
+                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Sá»‘ tiá»n thanh toÃ¡n</label>
                                 <PriceInput
                                   value={dep.amount}
                                   onChange={(val) => {
@@ -1434,11 +1480,11 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                     setEditDeposits(updated);
                                   }}
                                   className="w-full px-1.5 py-0.5 border text-right font-bold text-slate-800 rounded text-xs font-mono bg-slate-50 focus:bg-white"
-                                  placeholder="Số tiền..."
+                                  placeholder="Sá»‘ tiá»n..."
                                 />
                               </div>
                               <div className="w-28 shrink-0">
-                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Phương thức</label>
+                                <label className="block text-[8px] font-bold text-slate-400 uppercase">PhÆ°Æ¡ng thá»©c</label>
                                 <select
                                   value={dep.paymentMethod.startsWith('CK') ? 'CK' : dep.paymentMethod}
                                   onChange={(e) => {
@@ -1448,12 +1494,12 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                   }}
                                   className="w-full px-1.5 py-0.5 border text-xs font-semibold rounded text-slate-700 bg-slate-50 focus:bg-white"
                                 >
-                                  <option value="CK">Chuyển khoản</option>
-                                  <option value="TM">Tiền mặt</option>
+                                  <option value="CK">Chuyá»ƒn khoáº£n</option>
+                                  <option value="TM">Tiá»n máº·t</option>
                                 </select>
                               </div>
                               <div className="flex-1 min-w-[150px]">
-                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Ghi chú</label>
+                                <label className="block text-[8px] font-bold text-slate-400 uppercase">Ghi chÃº</label>
                                 <input
                                   type="text"
                                   value={dep.note || ''}
@@ -1462,7 +1508,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                     updated[dIdx].note = e.target.value;
                                     setEditDeposits(updated);
                                   }}
-                                  placeholder="Ghi chú (Thanh toán lần thứ...)"
+                                  placeholder="Ghi chÃº (Thanh toÃ¡n láº§n thá»©...)"
                                   className="w-full px-1.5 py-0.5 border rounded text-xs text-slate-700 font-medium bg-slate-50 focus:bg-white"
                                 />
                               </div>
@@ -1483,6 +1529,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       )}
                     </div>
                   )}
+
                   {/* Actions buttons */}
                   <div className="flex justify-end gap-2 border-t pt-4">
                     <button
@@ -1490,7 +1537,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       onClick={() => setIsEditing(false)}
                       className="px-4 py-1.5 border hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-md transition-colors"
                     >
-                      Hủy Bỏ
+                      Há»§y Bá»
                     </button>
                     <button
                       type="submit"
@@ -1502,7 +1549,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       ) : (
                         <Check className="w-3 h-3" />
                       )}
-                      <span>{isCreatingFromTemplate ? "Thêm mới" : "Lưu Thay Đổi"}</span>
+                      <span>{isCreatingFromTemplate ? "ThÃªm má»›i" : "LÆ°u Thay Äá»•i"}</span>
                     </button>
                   </div>
                 </form>
@@ -1521,7 +1568,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    Phiếu tiêu chuẩn (Không VAT)
+                    Phiáº¿u tiÃªu chuáº©n (KhÃ´ng VAT)
                   </button>
                   <button
                     type="button"
@@ -1532,7 +1579,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    Phiếu chi tiết VAT (Có Trước VAT)
+                    Phiáº¿u chi tiáº¿t VAT (CÃ³ TrÆ°á»›c VAT)
                   </button>
                   <button
                     type="button"
@@ -1543,9 +1590,10 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    Biên bản bàn giao
+                    BiÃªn báº£n bÃ n giao
                   </button>
                 </div>
+
                 {/* Printable PurchaseOrder Area (Clean corporate style matching exact reqs) */}
                 <div id="printable_purchaseOrder_area" className="border border-slate-200 rounded-lg p-6 bg-white text-slate-800 overflow-x-auto">
                   <div style={{ fontFamily: '"Times New Roman", Times, serif', margin: '0 auto', maxWidth: '800px', fontSize: '14px', lineHeight: '1.4', color: 'black' }}>
@@ -1553,46 +1601,49 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       <div style={{ padding: '10px 0' }}>
                         {/* Company Header matching image */}
                         <div style={{ marginBottom: '25px', fontFamily: '"Times New Roman", Times, serif' }}>
-                          <div style={{ fontWeight: 'bold', fontSize: '15px', textTransform: 'uppercase' }}>CÔNG TY TRÁCH NHIỆM HỮU HẠN DỊCH VỤ VIỄN THÔNG ĐỨC VINH</div>
-                          <div style={{ fontSize: '14px' }}>137 Đường Thới Tam Thôn 9, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam.</div>
+                          <div style={{ fontWeight: 'bold', fontSize: '15px', textTransform: 'uppercase' }}>CÃ”NG TY TRÃCH NHIá»†M Há»®U Háº N Dá»ŠCH Vá»¤ VIá»„N THÃ”NG Äá»¨C VINH</div>
+                          <div style={{ fontSize: '14px' }}>137 ÄÆ°á»ng Thá»›i Tam ThÃ´n 9, XÃ£ ÄÃ´ng Tháº¡nh, ThÃ nh phá»‘ Há»“ ChÃ­ Minh, Viá»‡t Nam.</div>
                         </div>
+
                         {/* Title Section */}
                         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '22px', letterSpacing: '0.5px' }}>BIÊN BẢN GIAO NHẬN VẬT TƯ</div>
+                          <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '22px', letterSpacing: '0.5px' }}>BIÃŠN Báº¢N GIAO NHáº¬N Váº¬T TÆ¯</div>
                           <div style={{ fontSize: '14px', fontStyle: 'italic' }}>
-                            Ngày {selectedPurchaseOrder.createdAt ? String(new Date(selectedPurchaseOrder.createdAt).getDate()).padStart(2, '0') : '...'} tháng {selectedPurchaseOrder.createdAt ? String(new Date(selectedPurchaseOrder.createdAt).getMonth() + 1).padStart(2, '0') : '...'} năm {selectedPurchaseOrder.createdAt ? new Date(selectedPurchaseOrder.createdAt).getFullYear() : '...'} tại
+                            NgÃ y {selectedPurchaseOrder.createdAt ? String(new Date(selectedPurchaseOrder.createdAt).getDate()).padStart(2, '0') : '...'} thÃ¡ng {selectedPurchaseOrder.createdAt ? String(new Date(selectedPurchaseOrder.createdAt).getMonth() + 1).padStart(2, '0') : '...'} nÄƒm {selectedPurchaseOrder.createdAt ? new Date(selectedPurchaseOrder.createdAt).getFullYear() : '...'} táº¡i
                           </div>
                         </div>
+
                         {/* Party Information */}
                         <div style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '15px' }}>
                           <div>
-                            <strong>Đại diện bên nhận (Bên A):</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>CÔNG TY TRÁCH NHIỆM HỮU HẠN DỊCH VỤ VIỄN THÔNG ĐỨC VINH</span>
+                            <strong>Äáº¡i diá»‡n bÃªn nháº­n (BÃªn A):</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>CÃ”NG TY TRÃCH NHIá»†M Há»®U Háº N Dá»ŠCH Vá»¤ VIá»„N THÃ”NG Äá»¨C VINH</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                            <span style={{ width: '50%' }}>Ông (Bà): ....................................................</span>
-                            <span style={{ width: '50%' }}>Chức vụ: ....................................................</span>
+                            <span style={{ width: '50%' }}>Ã”ng (BÃ ): ....................................................</span>
+                            <span style={{ width: '50%' }}>Chá»©c vá»¥: ....................................................</span>
                           </div>
                           <div style={{ marginTop: '8px' }}>
-                            <strong>Đại diện bên giao (Bên B):</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>{selectedPurchaseOrder.supplierName || "...................................................."}</span>
+                            <strong>Äáº¡i diá»‡n bÃªn giao (BÃªn B):</strong> <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>{selectedPurchaseOrder.supplierName || "...................................................."}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                            <span style={{ width: '50%' }}>Ông (Bà): ....................................................</span>
-                            <span style={{ width: '50%' }}>Chức vụ: ....................................................</span>
+                            <span style={{ width: '50%' }}>Ã”ng (BÃ ): ....................................................</span>
+                            <span style={{ width: '50%' }}>Chá»©c vá»¥: ....................................................</span>
                           </div>
                           <div style={{ fontWeight: 'bold', marginTop: '6px' }}>
-                            Hai bên cùng nhau bàn giao hàng hoá chi tiết như sau:
+                            Hai bÃªn cÃ¹ng nhau bÃ n giao hÃ ng hoÃ¡ chi tiáº¿t nhÆ° sau:
                           </div>
                         </div>
+
                         {/* Items Table matching exact structure of the image */}
                         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '25px' }}>
                           <thead>
                             <tr>
                               <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '40px', fontWeight: 'bold' }}>STT</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', fontWeight: 'bold' }}>Tên hàng</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '90px', fontWeight: 'bold' }}>Đơn vị tính</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '90px', fontWeight: 'bold' }}>Số lượng</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '120px', fontWeight: 'bold' }}>Số Serial</th>
-                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '150px', fontWeight: 'bold' }}>Thời hạn bảo hành</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', fontWeight: 'bold' }}>TÃªn hÃ ng</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '90px', fontWeight: 'bold' }}>ÄÆ¡n vá»‹ tÃ­nh</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '90px', fontWeight: 'bold' }}>Sá»‘ lÆ°á»£ng</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '120px', fontWeight: 'bold' }}>Sá»‘ Serial</th>
+                              <th style={{ border: '1px solid black', padding: '6px', textAlign: 'center', width: '150px', fontWeight: 'bold' }}>Thá»i háº¡n báº£o hÃ nh</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1600,7 +1651,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                               <tr key={idx}>
                                 <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{idx + 1}</td>
                                 <td style={{ border: '1px solid black', padding: '6px' }}>{item.productName}</td>
-                                <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "Cái"}</td>
+                                <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "CÃ¡i"}</td>
                                 <td style={{ border: '1px solid black', padding: '6px', textAlign: 'center' }}>{formatQuantity(item.quantity)}</td>
                                 <td style={{ border: '1px solid black', padding: '6px' }}></td>
                                 <td style={{ border: '1px solid black', padding: '6px' }}></td>
@@ -1608,20 +1659,22 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                             ))}
                           </tbody>
                         </table>
+
                         {/* Warranty Information */}
                         <div style={{ fontSize: '14px', lineHeight: '1.6', marginBottom: '35px' }}>
-                          <div>Về chất lượng hàng hóa và phụ kiện: Hàng hoá được cung cấp mới 100%.</div>
-                          <div>Biên bản này được lập thành 02 (hai) bản có giá trị như nhau, mỗi bên giữ 01 (một) bản để cùng thực hiện.</div>
+                          <div>Vá» cháº¥t lÆ°á»£ng hÃ ng hÃ³a vÃ  phá»¥ kiá»‡n: HÃ ng hoÃ¡ Ä‘Æ°á»£c cung cáº¥p má»›i 100%.</div>
+                          <div>BiÃªn báº£n nÃ y Ä‘Æ°á»£c láº­p thÃ nh 02 (hai) báº£n cÃ³ giÃ¡ trá»‹ nhÆ° nhau, má»—i bÃªn giá»¯ 01 (má»™t) báº£n Ä‘á»ƒ cÃ¹ng thá»±c hiá»‡n.</div>
                         </div>
+
                         {/* Signatures */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 40px 100px 40px', fontSize: '14px' }}>
                           <div style={{ textAlign: 'center', width: '250px' }}>
-                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>ĐẠI DIỆN BÊN NHẬN</div>
-                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(Ký, họ tên)</div>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>Äáº I DIá»†N BÃŠN NHáº¬N</div>
+                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(KÃ½, há» tÃªn)</div>
                           </div>
                           <div style={{ textAlign: 'center', width: '250px' }}>
-                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>ĐẠI DIỆN BÊN GIAO</div>
-                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(Ký, họ tên)</div>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>Äáº I DIá»†N BÃŠN GIAO</div>
+                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(KÃ½, há» tÃªn)</div>
                           </div>
                         </div>
                       </div>
@@ -1629,48 +1682,49 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       <>
                         <div style={{ border: '1px solid black' }}>
                           <div style={{ textAlign: 'center', borderBottom: '1px solid black', padding: '10px' }}>
-                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '18px' }}>CÔNG TY TNHH DỊCH VỤ VIỄN THÔNG ĐỨC VINH</div>
-                            <div>Địa chỉ: 137 Đường Thới Tam Thôn 9, Xã Thới Tam Thôn, Huyện Hóc Môn, TP.Hồ Chí Minh</div>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '18px' }}>CÃ”NG TY TNHH Dá»ŠCH Vá»¤ VIá»„N THÃ”NG Äá»¨C VINH</div>
+                            <div>Äá»‹a chá»‰: 137 ÄÆ°á»ng Thá»›i Tam ThÃ´n 9, XÃ£ Thá»›i Tam ThÃ´n, Huyá»‡n HÃ³c MÃ´n, TP.Há»“ ChÃ­ Minh</div>
                             <div>MST: 0311193770</div>
                             <div>Hotline: 0938288876-0915877739.</div>
                             <div>FB: DUCVINHSOLAR-Website: Ducvinhsolar.com</div>
                           </div>
                           
                           <div style={{ textAlign: 'center', padding: '15px 15px 5px 15px' }}>
-                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '22px', marginBottom: '5px' }}>PHIẾU NHẬP KHO VẬT TƯ</div>
-                            <div style={{ fontSize: '14px', fontStyle: 'italic' }}>Ngày {selectedPurchaseOrder.createdAt ? String(new Date(selectedPurchaseOrder.createdAt).getDate()).padStart(2, '0') : '...'} tháng {selectedPurchaseOrder.createdAt ? String(new Date(selectedPurchaseOrder.createdAt).getMonth() + 1).padStart(2, '0') : '...'} năm {selectedPurchaseOrder.createdAt ? new Date(selectedPurchaseOrder.createdAt).getFullYear() : '...'}</div>
-                            <div style={{ fontSize: '14px', marginBottom: '15px' }}>Số: {selectedPurchaseOrder.documentCode}</div>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '22px', marginBottom: '5px' }}>PHIáº¾U NHáº¬P KHO Váº¬T TÆ¯</div>
+                            <div style={{ fontSize: '14px', fontStyle: 'italic' }}>NgÃ y {selectedPurchaseOrder.createdAt ? String(new Date(selectedPurchaseOrder.createdAt).getDate()).padStart(2, '0') : '...'} thÃ¡ng {selectedPurchaseOrder.createdAt ? String(new Date(selectedPurchaseOrder.createdAt).getMonth() + 1).padStart(2, '0') : '...'} nÄƒm {selectedPurchaseOrder.createdAt ? new Date(selectedPurchaseOrder.createdAt).getFullYear() : '...'}</div>
+                            <div style={{ fontSize: '14px', marginBottom: '15px' }}>Sá»‘: {selectedPurchaseOrder.documentCode}</div>
                           </div>
                           
                           <div style={{ padding: '0 15px 15px 15px', borderBottom: '1px solid black' }}>
-                            <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Tên nhà cung cấp:</strong> {selectedPurchaseOrder.supplierName || "...................................................."}</div>
-                            <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Địa chỉ:</strong> {selectedPurchaseOrder.supplierAddress || "...................................................."}</div>
-                            <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Số điện thoại:</strong> {selectedPurchaseOrder.supplierPhone || "...................................................."}</div>
-                            <div style={{ fontSize: '14px' }}><strong>Mã số thuế:</strong> {selectedPurchaseOrder.supplierTaxId || "...................................................."}</div>
+                            <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>TÃªn nhÃ  cung cáº¥p:</strong> {selectedPurchaseOrder.supplierName || "...................................................."}</div>
+                            <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Äá»‹a chá»‰:</strong> {selectedPurchaseOrder.supplierAddress || "...................................................."}</div>
+                            <div style={{ fontSize: '14px', marginBottom: '3px' }}><strong>Sá»‘ Ä‘iá»‡n thoáº¡i:</strong> {selectedPurchaseOrder.supplierPhone || "...................................................."}</div>
+                            <div style={{ fontSize: '14px' }}><strong>MÃ£ sá»‘ thuáº¿:</strong> {selectedPurchaseOrder.supplierTaxId || "...................................................."}</div>
                           </div>
+
                           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                               {printType === 'vat' ? (
                                 <tr>
                                   <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '40px' }}>STT</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>Mã sản phẩm</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>Tên thiết bị</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '60px' }}>Đơn vị</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '60px' }}>Số lượng</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '90px' }}>Đơn giá</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>MÃ£ sáº£n pháº©m</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>TÃªn thiáº¿t bá»‹</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '60px' }}>ÄÆ¡n vá»‹</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '60px' }}>Sá»‘ lÆ°á»£ng</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '90px' }}>ÄÆ¡n giÃ¡</th>
                                   <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '50px' }}>VAT</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>Trước VAT</th>
-                                  <th style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'center', width: '110px' }}>Thành tiền</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>TrÆ°á»›c VAT</th>
+                                  <th style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'center', width: '110px' }}>ThÃ nh tiá»n</th>
                                 </tr>
                               ) : (
                                 <tr>
                                   <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '40px' }}>STT</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>Mã sản phẩm</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>Tên thiết bị</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '80px' }}>Đơn vị</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '80px' }}>Số lượng</th>
-                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>Đơn giá</th>
-                                  <th style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'center', width: '120px' }}>Thành tiền</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>MÃ£ sáº£n pháº©m</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>TÃªn thiáº¿t bá»‹</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '80px' }}>ÄÆ¡n vá»‹</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '80px' }}>Sá»‘ lÆ°á»£ng</th>
+                                  <th style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center', width: '100px' }}>ÄÆ¡n giÃ¡</th>
+                                  <th style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'center', width: '120px' }}>ThÃ nh tiá»n</th>
                                 </tr>
                               )}
                             </thead>
@@ -1687,7 +1741,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{idx + 1}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.productCode || ""}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>{item.productName}</td>
-                                        <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "Cái"}</td>
+                                        <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "CÃ¡i"}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{formatQuantity(item.quantity)}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'right' }}>{donGiaPreVat.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.hasVat ? `${vatRate}%` : '0%'}</td>
@@ -1700,7 +1754,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                     <td colSpan={3} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                       <div style={{ display: 'flex' }}>
                                         <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block', fontSize: '8px' }}>II</span>
-                                        <span style={{ fontWeight: 'bold', fontSize: '9px' }}>TỔNG CỘNG TIỀN HÀNG (TRƯỚC VAT)</span>
+                                        <span style={{ fontWeight: 'bold', fontSize: '9px' }}>Tá»”NG Cá»˜NG TIá»€N HÃ€NG (TRÆ¯á»šC VAT)</span>
                                       </div>
                                     </td>
                                     <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}></td>
@@ -1720,7 +1774,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                     <td colSpan={3} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                       <div style={{ display: 'flex' }}>
                                         <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block', fontSize: '8px' }}>III</span>
-                                        <span style={{ fontWeight: 'bold', fontSize: '9px' }}>TỔNG TIỀN THUẾ GTGT (VAT)</span>
+                                        <span style={{ fontWeight: 'bold', fontSize: '9px' }}>Tá»”NG TIá»€N THUáº¾ GTGT (VAT)</span>
                                       </div>
                                     </td>
                                     <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}></td>
@@ -1742,7 +1796,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                     <td colSpan={3} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                       <div style={{ display: 'flex' }}>
                                         <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block', fontSize: '8px' }}>IV</span>
-                                        <span style={{ fontWeight: 'bold', fontSize: '9px' }}>TỔNG CỘNG TIỀN THANH TOÁN</span>
+                                        <span style={{ fontWeight: 'bold', fontSize: '9px' }}>Tá»”NG Cá»˜NG TIá»€N THANH TOÃN</span>
                                       </div>
                                     </td>
                                     <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}></td>
@@ -1761,7 +1815,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                           <td colSpan={3} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', fontStyle: 'italic' }}>
                                             <div style={{ display: 'flex' }}>
                                               <span style={{ width: '40px', textAlign: 'center', display: 'inline-block' }}>-</span>
-                                              <span style={{ fontWeight: 'bold', fontSize: '9px' }}>{dep.note || `Thanh toán lần thứ ${depIdx + 1}`}</span>
+                                              <span style={{ fontWeight: 'bold', fontSize: '9px' }}>{dep.note || `Thanh toÃ¡n láº§n thá»© ${depIdx + 1}`}</span>
                                             </div>
                                           </td>
                                           <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}></td>
@@ -1778,7 +1832,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                         <td colSpan={3} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                           <div style={{ display: 'flex' }}>
                                             <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block', fontSize: '8px' }}>V</span>
-                                            <span style={{ fontWeight: 'bold', fontSize: '9px' }}>CÒN LẠI CẦN THANH TOÁN</span>
+                                            <span style={{ fontWeight: 'bold', fontSize: '9px' }}>CÃ’N Láº I Cáº¦N THANH TOÃN</span>
                                           </div>
                                         </td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}></td>
@@ -1802,7 +1856,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{idx + 1}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.productCode || ""}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>{item.productName}</td>
-                                        <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "Cái"}</td>
+                                        <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{item.unit || "CÃ¡i"}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'center' }}>{formatQuantity(item.quantity)}</td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', textAlign: 'right' }}>{item.price.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                         <td style={{ borderBottom: '1px solid black', padding: '6px', textAlign: 'right' }}>{baseTotal.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -1813,7 +1867,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                     <td colSpan={3} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                       <div style={{ display: 'flex' }}>
                                         <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block' }}>II</span>
-                                        <span style={{ fontWeight: 'bold' }}>TỔNG CỘNG</span>
+                                        <span style={{ fontWeight: 'bold' }}>Tá»”NG Cá»˜NG</span>
                                       </div>
                                     </td>
                                     <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}></td>
@@ -1830,7 +1884,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                           <td colSpan={3} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px', fontStyle: 'italic' }}>
                                             <div style={{ display: 'flex' }}>
                                               <span style={{ width: '40px', textAlign: 'center', display: 'inline-block' }}>-</span>
-                                              <span style={{ fontWeight: 'bold' }}>{dep.note || `Thanh toán lần thứ ${depIdx + 1}`}</span>
+                                              <span style={{ fontWeight: 'bold' }}>{dep.note || `Thanh toÃ¡n láº§n thá»© ${depIdx + 1}`}</span>
                                             </div>
                                           </td>
                                           <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}></td>
@@ -1845,7 +1899,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                         <td colSpan={3} style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}>
                                           <div style={{ display: 'flex' }}>
                                             <span style={{ fontWeight: 'bold', width: '40px', textAlign: 'center', display: 'inline-block' }}>III</span>
-                                            <span style={{ fontWeight: 'bold' }}>CÒN LẠI CẦN THANH TOÁN</span>
+                                            <span style={{ fontWeight: 'bold' }}>CÃ’N Láº I Cáº¦N THANH TOÃN</span>
                                           </div>
                                         </td>
                                         <td style={{ borderBottom: '1px solid black', borderRight: '1px solid black', padding: '6px' }}></td>
@@ -1861,21 +1915,22 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                               )}
                             </tbody>
                           </table>
+
                           <div style={{ padding: '6px', textAlign: 'center', fontStyle: 'italic', fontWeight: 'bold' }}>
-                            Bằng chữ: {(() => {
+                            Báº±ng chá»¯: {(() => {
                               const totalOrderAmount = selectedPurchaseOrder.items?.reduce((acc, item) => acc + (item.quantity * item.price), 0) || 0;
                               const totalDepositsAmount = selectedPurchaseOrder.depositEnabled ? (selectedPurchaseOrder.deposits?.reduce((acc, d) => acc + d.amount, 0) || 0) : 0;
                               const amount = totalOrderAmount - totalDepositsAmount;
-                              if (amount === 0) return "Không đồng chẵn./.";
-                              const t = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+                              if (amount === 0) return "KhÃ´ng Ä‘á»“ng cháºµn./.";
+                              const t = ["khÃ´ng", "má»™t", "hai", "ba", "bá»‘n", "nÄƒm", "sÃ¡u", "báº£y", "tÃ¡m", "chÃ­n"];
                               const r = (r2, n) => {
                                 let o2 = "", a2 = Math.floor(r2 / 100), e2 = r2 % 100;
-                                if (n || a2 > 0) { o2 += " " + t[a2] + " trăm"; o2 += e2 === 0 ? "" : (e2 < 10 ? " lẻ" : ""); }
+                                if (n || a2 > 0) { o2 += " " + t[a2] + " trÄƒm"; o2 += e2 === 0 ? "" : (e2 < 10 ? " láº»" : ""); }
                                 let i2 = Math.floor(e2 / 10), m2 = e2 % 10;
-                                if (i2 > 0) { o2 += i2 === 1 ? " mười" : " " + t[i2] + " mươi"; }
+                                if (i2 > 0) { o2 += i2 === 1 ? " mÆ°á»i" : " " + t[i2] + " mÆ°Æ¡i"; }
                                 if (m2 > 0) {
-                                  if (m2 === 1 && i2 > 1) o2 += " mốt";
-                                  else if (m2 === 5 && i2 > 0) o2 += " lăm";
+                                  if (m2 === 1 && i2 > 1) o2 += " má»‘t";
+                                  else if (m2 === 5 && i2 > 0) o2 += " lÄƒm";
                                   else o2 += " " + t[m2];
                                 }
                                 return o2;
@@ -1887,104 +1942,85 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                                 num = Math.floor(num / 1e9);
                                 let i2 = ty > 0 ? ((num2, e3) => {
                                   let resO = "", a3 = Math.floor(num2 / 1e6), n2 = num2 % 1e6;
-                                  if (a3 > 0) { resO += r(a3, e3) + " triệu"; e3 = true; }
+                                  if (a3 > 0) { resO += r(a3, e3) + " triá»‡u"; e3 = true; }
                                   let idx2 = Math.floor(n2 / 1e3), m3 = n2 % 1e3;
-                                  if (idx2 > 0) { resO += r(idx2, e3) + " nghìn"; e3 = true; }
+                                  if (idx2 > 0) { resO += r(idx2, e3) + " nghÃ¬n"; e3 = true; }
                                   if (m3 > 0) resO += r(m3, e3);
                                   return resO;
                                 })(ty, num > 0) : "";
-                                if (i2) o2 = i2 + (e2 > 0 ? " tỷ".repeat(e2) : "") + o2;
+                                if (i2) o2 = i2 + (e2 > 0 ? " tá»·".repeat(e2) : "") + o2;
                                 e2++;
                               } while (num > 0);
                               let res = o2.trim();
-                              if (res.startsWith("lẻ ")) res = res.substring(3);
-                              if (isNegative) res = "âm " + res;
+                              if (res.startsWith("láº» ")) res = res.substring(3);
+                              if (isNegative) res = "Ã¢m " + res;
                               res = res.charAt(0).toUpperCase() + res.slice(1);
-                              return res + " đồng chẵn./.";
+                              return res + " Ä‘á»“ng cháºµn./.";
                             })()}
                           </div>
                         </div>
+
                         <div style={{ padding: '15px 10px' }}>
-                          <div style={{ fontStyle: 'italic', color: '#444' }}>Ghi chú thanh toán: Đã cọc / thanh toán theo lịch sử phiếu nhập.</div>
+                          <div style={{ fontStyle: 'italic', color: '#444' }}>Ghi chÃº thanh toÃ¡n: ÄÃ£ cá»c / thanh toÃ¡n theo lá»‹ch sá»­ phiáº¿u nháº­p.</div>
                         </div>
+
                         {/* Signatures */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 40px 100px 40px', fontSize: '14px' }}>
                           <div style={{ textAlign: 'center', width: '250px' }}>
-                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>ĐẠI DIỆN BÊN NHẬN</div>
-                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(Ký, họ tên)</div>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>Äáº I DIá»†N BÃŠN NHáº¬N</div>
+                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(KÃ½, há» tÃªn)</div>
                           </div>
                           <div style={{ textAlign: 'center', width: '250px' }}>
-                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>ĐẠI DIỆN BÊN GIAO</div>
-                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(Ký, họ tên)</div>
+                            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>Äáº I DIá»†N BÃŠN GIAO</div>
+                            <div style={{ fontStyle: 'italic', fontSize: '12px', color: '#555' }}>(KÃ½, há» tÃªn)</div>
                           </div>
                         </div>
                       </>
                     )}
                   </div>
                 </div>
+
                 {/* Operations & Interactive Elements in the modal */}
                 <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 flex flex-wrap gap-3 items-center justify-between">
-
+                  
                   {/* Status Toggle buttons inside view */}
                   <div className="space-y-1">
-                    <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Cập nhật nhanh phương thức thanh toán</span>
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -2009,15 +2113,15 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
-  
+                    <span className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Cáº­p nháº­t nhanh phÆ°Æ¡ng thá»©c thanh toÃ¡n</span>
                     <div className="flex gap-1.5 bg-white border rounded-lg p-1">
                       <button
                         onClick={() => handleChangeStatus(selectedPurchaseOrder.id, 'CTT')}
                         className={`px-3 py-1 text-xs font-semibold rounded ${selectedPurchaseOrder.status === 'CTT' ? 'bg-red-50 text-red-700 font-bold' : 'text-slate-500 hover:text-slate-800'}`}
                       >
-                        Chưa thanh toán
+                        ChÆ°a thanh toÃ¡n
                       </button>
                       <button
                         onClick={() => handleChangeStatus(selectedPurchaseOrder.id, 'TM')}
                         className={`px-3 py-1 text-xs font-semibold rounded ${selectedPurchaseOrder.status === 'TM' ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-slate-500 hover:text-slate-800'}`}
                       >
-                        Tiền mặt
+                        Tiá»n máº·t
                       </button>
                       <button
                         onClick={() => handleChangeStatus(selectedPurchaseOrder.id, 'CK')}
                         className={`px-3 py-1 text-xs font-semibold rounded ${selectedPurchaseOrder.status.startsWith('CK') ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-500 hover:text-slate-800'}`}
                       >
-                        Chuyển khoản
+                        Chuyá»ƒn khoáº£n
                       </button>
                     </div>
                   </div>
 
-                  {selectedPurchaseOrder.status.startsWith('CK') && (
-                    <div className="flex gap-2 items-center mb-4 p-2 bg-blue-50/50 rounded-lg border border-blue-100">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase">Tài khoản nhận:</span>
+                                 {selectedPurchaseOrder.status.startsWith('CK') && (
+                    <div className="flex gap-2 items-center mb-4 p-2 bg-blue-50/50 rounded-lg border border-blue-100 w-[385px]">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">TÃ i khoáº£n nháº­n:</span>
                       <select
                         value={selectedPurchaseOrder.status.startsWith('CK - ') ? selectedPurchaseOrder.status.substring(5) : ''}
                         onChange={(e) => {
                           const val = e.target.value;
                           handleChangeStatus(selectedPurchaseOrder.id, val ? `CK - ${val}` : 'CK');
                         }}
-                        className="px-2 py-1 text-xs border border-slate-200 rounded font-semibold text-slate-700 outline-none focus:border-blue-400"
+                        className="px-2 py-1 text-xs border border-slate-200 rounded font-semibold text-slate-700 outline-none focus:border-blue-400 w-[300px]"
                       >
-                        <option value="">-- Tùy chọn --</option>
+                        <option value="">-- TÃ¹y chá»n --</option>
                         {bankAccounts.map(b => {
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -2028,19 +2132,24 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
-  
                           const bankStr = `${b.bankName} - ${b.accountNumber} - ${b.accountName}`;
                           return <option key={b.id} value={bankStr}>{bankStr}</option>;
                         })}
@@ -1993,7 +2029,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                   )}
 
                   <div className="flex gap-2">
-
+                    
                     {/* Add Deposit toggle */}
                     {selectedPurchaseOrder.depositEnabled && (
                       <button
@@ -2001,108 +2037,80 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                         className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                       >
                         <Coins className="w-4 h-4 text-emerald-600" />
-                        <span>Thanh Toán Thêm</span>
+                        <span>Thanh ToÃ¡n ThÃªm</span>
                       </button>
                     )}
 
                     {!selectedPurchaseOrder.isRecorded && (
                       <button
                         onClick={startEditing}
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -2068,13 +2177,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
-  
                         className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                       >
                         <Edit3 className="w-4 h-4" />
-                        <span>Sửa Phiếu Nhập</span>
+                        <span>Sá»­a Phiáº¿u Nháº­p</span>
                       </button>
                     )}
+
                     <button
                       onClick={handlePrint}
                       className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <Printer className="w-4 h-4" />
-                      <span>In Phiếu Nhập</span>
+                      <span>In Phiáº¿u Nháº­p</span>
                     </button>
+
                     <button
                       type="button"
                       onClick={() => exportDocumentToExcel(selectedPurchaseOrder, printType)}
                       className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                      <span>Xuất Excel</span>
+                                         <span>Xuáº¥t Excel</span>
                     </button>
 
+                    <div className="flex-1 min-w-[20px]"></div>
+                    <div className="w-px h-8 bg-slate-300 mx-1 hidden lg:block"></div>
                     <button
                       onClick={() => handleDeletePurchaseOrder(selectedPurchaseOrder.id)}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors ml-6"
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors lg:ml-2"
                     >
                       <Trash2 className="w-4 h-4" />
-                      <span>Xóa Phiếu Nhập</span>
+                      <span>XÃ³a Phiáº¿u Nháº­p</span>
                     </button>
                   </div>
 
                 </div>
 
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -2127,7 +2230,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
-  
                 {/* Popover/Collapsible Add Deposit form */}
                 {showAddDeposit && (
                   <form onSubmit={handleAddDepositPayment} className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3 animate-in slide-in-from-top-3 duration-100">
                     <h5 className="text-xs font-bold text-emerald-800 flex items-center gap-1.5 uppercase">
-                      <Coins className="w-4 h-4 text-emerald-600" /> Thanh toán thêm cho nhà cung cấp
+                      <Coins className="w-4 h-4 text-emerald-600" /> Thanh toÃ¡n thÃªm cho nhÃ  cung cáº¥p
                     </h5>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Số tiền thanh toán (VND)</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Sá»‘ tiá»n thanh toÃ¡n (VND)</label>
                         <input
                           type="number"
                           required
                           min="1"
-                          placeholder="Số tiền..."
+                          placeholder="Sá»‘ tiá»n..."
                           value={depositAmount}
                           onChange={(e) => setDepositAmount(Number(e.target.value))}
                           className="w-full px-3 py-1 bg-white border border-slate-200 rounded text-sm font-mono font-medium"
                         />
                       </div>
+
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Phương thức nhận</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">PhÆ°Æ¡ng thá»©c nháº­n</label>
                         <select
                           value={depositMethod}
                           onChange={(e: any) => setDepositMethod(e.target.value)}
                           className="w-full px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold"
                         >
-                          <option value="CK">Chuyển khoản (CK)</option>
-                          <option value="TM">Tiền mặt (TM)</option>
+                          <option value="CK">Chuyá»ƒn khoáº£n (CK)</option>
+                          <option value="TM">Tiá»n máº·t (TM)</option>
                         </select>
                         {depositMethod === 'CK' && (
                           <select
@@ -2110,7 +2118,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                             onChange={(e) => setSelectedDepositBankAccount(e.target.value)}
                             className="w-full mt-1 px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500"
                           >
-                            <option value="">-- Chọn tài khoản chuyển --</option>
+                            <option value="">-- Chá»n tÃ i khoáº£n chuyá»ƒn --</option>
                             {bankAccounts.map(b => {
                               const bankStr = `${b.bankName} - ${b.accountNumber} - ${b.accountName}`;
                               return <option key={b.id} value={bankStr}>{bankStr}</option>;
@@ -2120,28 +2128,11 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                       </div>
 
                       <div>
-                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Ghi chú thanh toán</label>
+                        <label className="block text-[10px] text-slate-500 font-semibold uppercase mb-1">Ghi chÃº thanh toÃ¡n</label>
                         <div className="flex gap-2">
                           <input
                             type="text"
-                            placeholder="Thanh toán đợt 2..."
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -2321,4 +2424,3 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
-  
+                            placeholder="Thanh toÃ¡n Ä‘á»£t 2..."
                             value={depositNote}
                             onChange={(e) => setDepositNote(e.target.value)}
                             className="flex-1 px-3 py-1 bg-white border border-slate-200 rounded text-xs"
@@ -2150,18 +2141,19 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                             type="submit"
                             className="px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1"
                           >
-                            <Check className="w-3.5 h-3.5" /> Lưu
+                            <Check className="w-3.5 h-3.5" /> LÆ°u
                           </button>
                         </div>
                       </div>
                     </div>
                   </form>
                 )}
+
                 {/* Audit Trail Log History Section */}
                 <div className="space-y-3">
                   <h4 className="font-display font-semibold text-slate-700 text-sm flex items-center gap-1.5 border-b pb-2">
                     <Clock className="w-4.5 h-4.5 text-slate-400" />
-                    <span>Nhật ký phiếu nhập (Audit Trail Log)</span>
+                    <span>Nháº­t kÃ½ phiáº¿u nháº­p (Audit Trail Log)</span>
                   </h4>
                   <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 bg-slate-50 rounded-lg p-3 border">
                     {selectedPurchaseOrder.logs && selectedPurchaseOrder.logs.length > 0 ? (
@@ -2172,7 +2164,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                               {log.action}
                             </span>
                             <p className="text-slate-600 font-medium">{log.details}</p>
-                            <p className="text-slate-400 text-[10px]">Người thực hiện: <b>{log.userEmail}</b></p>
+                            <p className="text-slate-400 text-[10px]">NgÆ°á»i thá»±c hiá»‡n: <b>{log.userEmail}</b></p>
                           </div>
                           <span className="text-[10px] text-slate-400 font-mono shrink-0">
                             {new Date(log.createdAt).toLocaleString('vi-VN')}
@@ -2180,15 +2172,17 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                         </div>
                       ))
                     ) : (
-                      <p className="text-xs text-slate-400 italic text-center py-4">Chưa có nhật ký hoạt động nào.</p>
+                      <p className="text-xs text-slate-400 italic text-center py-4">ChÆ°a cÃ³ nháº­t kÃ½ hoáº¡t Ä‘á»™ng nÃ o.</p>
                     )}
                   </div>
                 </div>
+
               </div>
             )}
           </div>
         </div>
       )}
+
       {/* Confirm Dialog */}
       {confirmDialog && confirmDialog.isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity">
@@ -2200,7 +2194,7 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                 </svg>
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-bold text-slate-900">Xác nhận</h3>
+                <h3 className="text-lg font-bold text-slate-900">XÃ¡c nháº­n</h3>
                 <p className="text-sm text-slate-500">{confirmDialog.message}</p>
               </div>
               <div className="pt-4 flex gap-3">
@@ -2209,97 +2203,104 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                   className="flex-1 bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors"
                   onClick={() => setConfirmDialog(null)}
                 >
-                  Hủy
+                  Há»§y
                 </button>
                 <button
                   type="button"
                   className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200"
                   onClick={confirmDialog.onConfirm}
                 >
-                  Đồng ý
+                  Äá»“ng Ã½
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
       {/* Quick Add Supplier Modal inside Edit flow */}
       {showNewSuppModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[70] p-4">
           <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-display font-semibold text-slate-800">Thêm Nhà Cung Cấp Nhanh</h3>
-              <button type="button" onClick={() => setShowNewSuppModal(false)} className="text-slate-400 hover:text-slate-600 text-lg">×</button>
+              <h3 className="font-display font-semibold text-slate-800">ThÃªm NhÃ  Cung Cáº¥p Nhanh</h3>
+              <button type="button" onClick={() => setShowNewSuppModal(false)} className="text-slate-400 hover:text-slate-600 text-lg">Ã—</button>
             </div>
             
             <form onSubmit={handleQuickAddSupplier} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tên Nhà Cung Cấp</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">TÃªn NhÃ  Cung Cáº¥p</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: Công ty Thiết bị Điện mặt trời Ánh Dương"
+                  placeholder="VÃ­ dá»¥: CÃ´ng ty Thiáº¿t bá»‹ Äiá»‡n máº·t trá»i Ãnh DÆ°Æ¡ng"
                   value={newSuppName}
                   onChange={(e) => setNewSuppName(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Số Điện Thoại</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sá»‘ Äiá»‡n Thoáº¡i</label>
                 <input
                   type="text"
-                  placeholder="Ví dụ: 0912345678"
+                  placeholder="VÃ­ dá»¥: 0912345678"
                   value={newSuppPhone}
                   onChange={(e) => setNewSuppPhone(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Địa Chỉ</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Äá»‹a Chá»‰</label>
                 <input
                   type="text"
-                  placeholder="Ví dụ: KCN Tân Bình, Tân Phú, TP. HCM"
+                  placeholder="VÃ­ dá»¥: KCN TÃ¢n BÃ¬nh, TÃ¢n PhÃº, TP. HCM"
                   value={newSuppAddress}
                   onChange={(e) => setNewSuppAddress(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Mã Số Thuế (Doanh nghiệp)</label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">MÃ£ Sá»‘ Thuáº¿ (Doanh nghiá»‡p)</label>
                 <input
                   type="text"
-                  placeholder="Mã số thuế doanh nghiệp (nếu có)"
+                  placeholder="MÃ£ sá»‘ thuáº¿ doanh nghiá»‡p (náº¿u cÃ³)"
                   value={newSuppTaxId}
                   onChange={(e) => setNewSuppTaxId(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono"
                 />
               </div>
+
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowNewSuppModal(false)}
                   className="px-3 py-1.5 border border-slate-200 rounded text-xs font-semibold text-slate-500 hover:bg-slate-50"
                 >
-                  Hủy
+                  Há»§y
                 </button>
                 <button
                   type="submit"
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1"
                 >
-                  Lưu Nhà Cung Cấp
+                  LÆ°u NhÃ  Cung Cáº¥p
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+
       {/* Template Selection Modal */}
       {showTemplateSelectionModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
             <div className="p-4 border-b flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-800">Chọn Phiếu Nhập Mẫu</h3>
-              <button onClick={() => setShowTemplateSelectionModal(false)} className="text-slate-500 hover:text-slate-700">Đóng</button>
+              <h3 className="font-bold text-slate-800">Chá»n Phiáº¿u Nháº­p Máº«u</h3>
+              <button onClick={() => setShowTemplateSelectionModal(false)} className="text-slate-500 hover:text-slate-700">ÄÃ³ng</button>
             </div>
             <div className="p-4 overflow-y-auto">
               <div className="space-y-2">
@@ -2310,14 +2311,16 @@ export const PurchaseInvoicesTab: React.FC<{ refreshTrigger: number; onPurchaseO
                   }}
                   className="w-full text-left p-3 border-2 border-emerald-500 rounded-lg hover:bg-emerald-50 transition-colors"
                 >
-                  <div className="font-bold text-emerald-800">+ Phiếu Trắng</div>
-                  <div className="text-xs text-emerald-600">Tạo phiếu nhập mới hoàn toàn</div>
+                  <div className="font-bold text-emerald-800">+ Phiáº¿u Tráº¯ng</div>
+                  <div className="text-xs text-emerald-600">Táº¡o phiáº¿u nháº­p má»›i hoÃ n toÃ n</div>
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };
+
